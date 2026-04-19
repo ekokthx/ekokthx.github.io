@@ -1,0 +1,622 @@
+{
+  "totalRaw": 7223,
+  "totalKept": 1266,
+  "dateRange": {
+    "min": "2021-02-07T02:04:16",
+    "max": "2026-04-19T06:14:09"
+  },
+  "categoryDefs": {
+    "Shooting": {
+      "color": "#ef4444",
+      "icon": "crosshair"
+    },
+    "Assault": {
+      "color": "#f97316",
+      "icon": "fist"
+    },
+    "Robbery": {
+      "color": "#dc2626",
+      "icon": "mask"
+    },
+    "Burglary": {
+      "color": "#9333ea",
+      "icon": "door"
+    },
+    "Theft": {
+      "color": "#a855f7",
+      "icon": "bag"
+    },
+    "Auto Theft": {
+      "color": "#7c3aed",
+      "icon": "car"
+    },
+    "Accident": {
+      "color": "#ff7b29",
+      "icon": "crash"
+    },
+    "Domestic": {
+      "color": "#ec4899",
+      "icon": "home"
+    },
+    "Mental Health": {
+      "color": "#22d3ee",
+      "icon": "brain"
+    },
+    "Drugs": {
+      "color": "#84cc16",
+      "icon": "pill"
+    },
+    "Sex Offense": {
+      "color": "#be185d",
+      "icon": "shield"
+    },
+    "Vandalism": {
+      "color": "#facc15",
+      "icon": "paint"
+    },
+    "Trespass": {
+      "color": "#fbbf24",
+      "icon": "eye"
+    },
+    "Weapons": {
+      "color": "#b91c1c",
+      "icon": "knife"
+    },
+    "Fire/Hazmat": {
+      "color": "#f43f5e",
+      "icon": "fire"
+    },
+    "Medical": {
+      "color": "#10b981",
+      "icon": "medkit"
+    },
+    "Alarm": {
+      "color": "#3b82f6",
+      "icon": "bell"
+    },
+    "Disturbance": {
+      "color": "#fb923c",
+      "icon": "megaphone"
+    },
+    "Welfare Check": {
+      "color": "#14b8a6",
+      "icon": "heart"
+    },
+    "Missing/Found": {
+      "color": "#06b6d4",
+      "icon": "search"
+    },
+    "Traffic": {
+      "color": "#0ea5e9",
+      "icon": "road"
+    },
+    "Patrol/Admin": {
+      "color": "#64748b",
+      "icon": "badge"
+    },
+    "Service": {
+      "color": "#a3a3a3",
+      "icon": "wrench"
+    },
+    "Other": {
+      "color": "#94a3b8",
+      "icon": "dot"
+    }
+  },
+  "categoryCounts": {
+    "Vandalism": 23,
+    "Alarm": 118,
+    "Patrol/Admin": 171,
+    "Traffic": 110,
+    "Medical": 82,
+    "Disturbance": 117,
+    "Drugs": 21,
+    "Other": 153,
+    "Theft": 267,
+    "Trespass": 4,
+    "Assault": 34,
+    "Sex Offense": 8,
+    "Mental Health": 29,
+    "Burglary": 3,
+    "Domestic": 3,
+    "Shooting": 6,
+    "Fire/Hazmat": 25,
+    "Robbery": 3,
+    "Service": 15,
+    "Accident": 28,
+    "Welfare Check": 6,
+    "Missing/Found": 36,
+    "Weapons": 3
+  },
+  "sevByCat": {
+    "Vandalism": {
+      "0": 2,
+      "3": 1,
+      "1": 18,
+      "2": 2
+    },
+    "Alarm": {
+      "2": 14,
+      "0": 15,
+      "3": 69,
+      "1": 18,
+      "4": 2
+    },
+    "Patrol/Admin": {
+      "1": 125,
+      "2": 16,
+      "0": 17,
+      "4": 2,
+      "3": 11
+    },
+    "Traffic": {
+      "1": 4,
+      "0": 28,
+      "3": 37,
+      "4": 3,
+      "2": 38
+    },
+    "Medical": {
+      "4": 8,
+      "3": 25,
+      "2": 4,
+      "1": 43,
+      "0": 2
+    },
+    "Disturbance": {
+      "1": 77,
+      "4": 9,
+      "0": 31
+    },
+    "Drugs": {
+      "2": 12,
+      "1": 7,
+      "0": 2
+    },
+    "Other": {
+      "1": 104,
+      "0": 16,
+      "2": 26,
+      "4": 5,
+      "3": 2
+    },
+    "Theft": {
+      "1": 160,
+      "2": 69,
+      "3": 31,
+      "4": 6,
+      "0": 2
+    },
+    "Trespass": {
+      "2": 4
+    },
+    "Assault": {
+      "2": 12,
+      "3": 8,
+      "1": 9,
+      "4": 3,
+      "0": 2
+    },
+    "Sex Offense": {
+      "1": 6,
+      "3": 2
+    },
+    "Mental Health": {
+      "1": 25,
+      "0": 3,
+      "2": 1
+    },
+    "Burglary": {
+      "0": 2,
+      "3": 1
+    },
+    "Domestic": {
+      "2": 3
+    },
+    "Shooting": {
+      "1": 4,
+      "3": 1,
+      "0": 1
+    },
+    "Fire/Hazmat": {
+      "1": 22,
+      "2": 3
+    },
+    "Robbery": {
+      "1": 1,
+      "3": 2
+    },
+    "Service": {
+      "1": 14,
+      "0": 1
+    },
+    "Accident": {
+      "4": 1,
+      "1": 15,
+      "0": 10,
+      "2": 2
+    },
+    "Welfare Check": {
+      "2": 2,
+      "1": 2,
+      "0": 2
+    },
+    "Missing/Found": {
+      "1": 35,
+      "2": 1
+    },
+    "Weapons": {
+      "0": 1,
+      "3": 2
+    }
+  },
+  "districts": [
+    "D1",
+    "D3",
+    "D8",
+    "D4",
+    "Bowie",
+    "D5",
+    "D2",
+    "D6",
+    "D7"
+  ],
+  "districtCounts": {
+    "D2": 11,
+    "D1": 182,
+    "D7": 1,
+    "D8": 26,
+    "Bowie": 20,
+    "D5": 20,
+    "D3": 44,
+    "D4": 21,
+    "D6": 8
+  },
+  "beats": [
+    "B61",
+    "G21",
+    "A1",
+    "F7",
+    "A12",
+    "A13",
+    "G51",
+    "H11",
+    "B63",
+    "B11",
+    "A11",
+    "K41",
+    "B51",
+    "B7",
+    "H31",
+    "J31",
+    "B31",
+    "E41",
+    "B12",
+    "C6",
+    "B62",
+    "B6",
+    "G12",
+    "BP5",
+    "BP4",
+    "BP1",
+    "BP3",
+    "BP6",
+    "BP2",
+    "B22",
+    "E2",
+    "G22",
+    "B28",
+    "E5",
+    "B1",
+    "W5",
+    "H4",
+    "A58",
+    "F2",
+    "H5",
+    "B4",
+    "C1",
+    "B5"
+  ],
+  "beatCounts": {
+    "E5": 1,
+    "E2": 2,
+    "B1": 1,
+    "W5": 1,
+    "H4": 1,
+    "A58": 1,
+    "BP1": 3,
+    "F2": 1,
+    "B63": 13,
+    "H5": 1,
+    "B51": 10,
+    "BP3": 3,
+    "B7": 10,
+    "B6": 6,
+    "G51": 14,
+    "B11": 13,
+    "J31": 9,
+    "BP6": 3,
+    "BP2": 3,
+    "E41": 8,
+    "BP5": 4,
+    "G12": 6,
+    "C6": 7,
+    "K41": 12,
+    "BP4": 4,
+    "B12": 8,
+    "G22": 2,
+    "B28": 2,
+    "G21": 22,
+    "B4": 1,
+    "B62": 7,
+    "H11": 14,
+    "H31": 10,
+    "C1": 1,
+    "B61": 32,
+    "A11": 13,
+    "B5": 1,
+    "B31": 9,
+    "A12": 17,
+    "A1": 20,
+    "B22": 3,
+    "A13": 15,
+    "F7": 19
+  },
+  "agencies": {
+    "Source 45": 10,
+    "Source 31": 48,
+    "Source 41": 91,
+    "Source 33": 63,
+    "License Plate Reader": 12,
+    "Source 60": 50,
+    "Source 58": 72,
+    "Source 47": 11,
+    "Source 7": 20,
+    "Source 64": 27,
+    "Source 40": 12,
+    "Source 55": 3,
+    "Source 38": 17,
+    "Source 49": 9,
+    "Source 27": 13,
+    "Source 25": 14,
+    "Source 13": 13,
+    "Source 23": 9,
+    "Source 32": 8,
+    "Source 26": 21,
+    "Source 51": 8,
+    "Source 5": 15,
+    "Source 29": 7,
+    "Source 36": 12,
+    "Source 28": 8,
+    "Source 22": 22,
+    "Source 56": 7,
+    "Source 12": 14,
+    "Source 63": 2,
+    "Source 16": 10,
+    "Source 4": 32,
+    "Source 9": 13,
+    "Source 18": 12,
+    "Source 14": 17,
+    "Source 39": 20,
+    "Source 11": 15,
+    "ShotSpotter": 97,
+    "Source 15": 96,
+    "Source 17": 5,
+    "Source 53": 44,
+    "Source 54": 108,
+    "Source 62": 27,
+    "Test Source": 5,
+    "Police Dept (RMS)": 128,
+    "Police Dept (CAD)": 19
+  },
+  "cities": {
+    "Washington": 215,
+    "Arlington": 95,
+    "Alexandria": 72,
+    "Fairfax": 61,
+    "Silver Spring": 58,
+    "Rockville": 49,
+    "Gaithersburg": 48,
+    "Frederick": 47,
+    "Reston": 45,
+    "Bethesda": 42,
+    "Hyattsville": 41,
+    "Woodbridge": 39,
+    "Waldorf": 39,
+    "Largo": 37,
+    "Ashburn": 36,
+    "College Park": 34,
+    "Bowie": 33,
+    "Falls Church": 32,
+    "Springfield": 29,
+    "Sterling": 29,
+    "Upper Marlboro": 26,
+    "Manassas": 26,
+    "Vienna": 25,
+    "Wheaton": 25,
+    "Annandale": 23,
+    "McLean": 22,
+    "Leesburg": 22,
+    "Greenbelt": 15
+  },
+  "states": {
+    "VA": 556,
+    "MD": 494,
+    "DC": 215
+  },
+  "topCodes": {
+    "THEFTVEH": 61,
+    "NOISE": 57,
+    "TS": 55,
+    "THEFTA": 45,
+    "TRUTHEFT": 37,
+    "SUBJSTOP": 36,
+    "PARK": 35,
+    "PALRMC": 34,
+    "Downtown patrol": 33,
+    "THEFT": 33,
+    "PALRMR": 32,
+    "DISORDISTURB": 25,
+    "Garage patrol": 22,
+    "Patrol check": 22,
+    "CKPREM": 22,
+    "VANDAL": 21,
+    "SICKR": 20,
+    "MISSINGCHILD": 20,
+    "BLSSICK": 19,
+    "THEFT1": 17,
+    "BLSACCIDENT": 16,
+    "LARC-23-3": 15,
+    "T": 14,
+    "LARC": 14,
+    "NOISED": 13,
+    "PARKING": 13,
+    "BLSUNCONSCIOUS": 13,
+    "FIREALARMCOMM": 12,
+    "CDS": 11,
+    "BREAK": 11,
+    "FIGHT": 11,
+    "UNK": 11,
+    "ACCIDENTPROP": 11,
+    "ALRMAFAR": 10,
+    "DISORDERLY": 9,
+    "LOUD": 9,
+    "TRUTHEFTAUTO": 9,
+    "THEFTINPROG": 9,
+    "MISSINGADULT": 9,
+    "USPARK": 7,
+    "DWI": 7,
+    "ALARMBUSINESS": 7,
+    "MISSINGCRIT": 7,
+    "TOW": 6,
+    "ASSAULT": 6,
+    "ASFIRE": 6,
+    "BREAKR": 6,
+    "WELFARE": 6,
+    "SERVICELIFT": 6,
+    "BLSMENTAL": 6,
+    "BLSOVERDOSE": 6,
+    "EDP": 6,
+    "CPR": 5,
+    "PT": 5,
+    "FPATROL": 5,
+    "HANGUP": 5,
+    "ALSCARDIAC": 5,
+    "LARC-23-9": 5,
+    "LARC-23-6": 5,
+    "NOISEI": 4,
+    "Beltway Parcel Patrol": 4,
+    "ALS0": 4,
+    "PALRMS": 4,
+    "RAPE3": 4,
+    "CKWELC": 4,
+    "MENTALPD": 4,
+    "CIVIL": 4,
+    "DWI-90D-2": 4,
+    "ALARMCB": 3,
+    "ASSAULTB": 3,
+    "Loitering": 3,
+    "ALARMRB": 3,
+    "DUI": 3,
+    "DVN": 3,
+    "SICKPERSON": 3,
+    "UNCONS": 3,
+    "LARCCI": 3,
+    "ADMIN": 3,
+    "Building patrol": 3,
+    "HALARM": 3
+  },
+  "sectionCounts": {
+    "cfs": 1211,
+    "incidents": 47,
+    "bolos": 6,
+    "shotspots": 2,
+    "notes": 0,
+    "obs": 0,
+    "dyn": 788,
+    "att": 9,
+    "rels": 66,
+    "tags": 1
+  },
+  "severityCounts": {
+    "0": 137,
+    "1": 689,
+    "2": 208,
+    "3": 192,
+    "4": 39
+  },
+  "sourceCounts": {
+    "1": 5,
+    "2": 97,
+    "4": 32,
+    "5": 15,
+    "7": 20,
+    "9": 13,
+    "11": 15,
+    "12": 14,
+    "13": 13,
+    "14": 17,
+    "15": 96,
+    "16": 10,
+    "17": 5,
+    "18": 12,
+    "19": 18,
+    "20": 128,
+    "22": 22,
+    "23": 9,
+    "25": 14,
+    "26": 21,
+    "27": 13,
+    "28": 8,
+    "29": 7,
+    "31": 48,
+    "32": 8,
+    "33": 63,
+    "36": 12,
+    "38": 17,
+    "39": 20,
+    "40": 12,
+    "41": 91,
+    "44": 12,
+    "45": 10,
+    "47": 11,
+    "49": 9,
+    "51": 8,
+    "53": 44,
+    "54": 108,
+    "55": 3,
+    "56": 7,
+    "58": 72,
+    "60": 50,
+    "62": 27,
+    "63": 2,
+    "64": 27
+  },
+  "statusCounts": {
+    "A": 4,
+    "Closed": 132,
+    "null": 242,
+    "Active": 7,
+    "I": 422,
+    "NR-No Report": 21,
+    "CN-Cancellation": 9,
+    "DUPPD-Duplicate Police": 1,
+    "Pending": 1,
+    "N/A": 276,
+    "DUPNCAN": 19,
+    "CANCELEV": 8,
+    "ASSNCASE": 31,
+    "CC": 1,
+    "RT-BWC": 2,
+    "IC": 1,
+    "TRULOSTTAGS": 1,
+    "NRT": 1,
+    "RT": 2,
+    "In Progress": 48,
+    "Report Only": 17,
+    "Just Occurred": 17,
+    "Open": 2
+  },
+  "totalEvents": 1265,
+  "region": "National Capital Region (NCR)"
+}
