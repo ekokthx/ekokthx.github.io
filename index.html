@@ -94,20 +94,25 @@
   }
 
   /* ============ SECTION BACKGROUND BANDS ============
-     Subtle full-width tints applied to each major <section id="…"> via a
-     ::before pseudo-element. The pseudo spans 100vw (edge-to-edge) but is
-     bounded vertically by the section, so the tints read as clean bands
-     without clipping descendants. Critically, this approach avoids both
-     `clip-path` (which clips fixed-positioned tooltips) and `isolation`
-     (which would trap fixed modals in the section's stacking context).
-     Direct children are promoted to `position: relative` so they paint
-     above the ::before per normal CSS painting order. Fixed-position
-     tooltips/modals (z-[9999]) escape to the viewport as usual and paint
-     above everything. Palette cycles cool cyan → neutral → warm amber. */
+     Refinement pass: softer layering, one focal gradient per section, no
+     competing light sources. Structure is unchanged — ::before paints the
+     subtle base tint and hairline divider; ::after paints a single,
+     vignette-masked accent glow on top. Opacities stay in the 0.02–0.08
+     range so the design reads clean and system-focused (Stripe / Linear /
+     Vercel), not like a glowy landing page.
+
+     Architecture notes:
+       - No `clip-path` or `isolation: isolate` — both would clip fixed
+         tooltips/modals.
+       - `:where()` zero-specificity rule promotes in-flow children to
+         position:relative so they paint above ::before, while Tailwind
+         .fixed/.absolute utilities still win on modals and popups.
+       - All pseudos are pointer-events:none. */
   section[id] {
     position: relative;
   }
-  section[id]::before {
+  section[id]::before,
+  section[id]::after {
     content: '';
     position: absolute;
     top: 0;
@@ -116,22 +121,131 @@
     width: 100vw;
     pointer-events: none;
   }
-  /* :where() gives this rule zero specificity so Tailwind's .fixed/.absolute/.sticky
-     classes on descendants (modals, popups, sticky headers) still win and keep
-     their intended positioning. Only children that have NO explicit position
-     utility get bumped to relative so they paint above the ::before tint. */
+  /* ::before = base band tint + hairline top divider */
+  section[id]::before {
+    border-top: 1px solid rgba(255,255,255,0.035);
+  }
+  /* ::after = single focal accent glow, softened and vignette-masked so it
+     fades to nothing at section edges. Lower opacity + no blend mode keeps
+     text crisp and avoids the hazy "glow stacking" look. */
+  section[id]::after {
+    opacity: 0.45;
+    -webkit-mask-image: radial-gradient(ellipse 70% 80% at 50% 50%, #000 55%, transparent 100%);
+            mask-image: radial-gradient(ellipse 70% 80% at 50% 50%, #000 55%, transparent 100%);
+  }
+  /* Hero — the platform section already carries its own visuals, so skip the top hairline. */
+  section#platform::before { border-top: 0; }
+
+  /* Zero specificity so Tailwind's position utilities still win on descendants. */
   :where(section[id] > *) { position: relative; }
 
-  section#platform::before      { background: rgba( 56,189,248,0.030); }
-  section#demo::before          { background: rgba(255,255,255,0.020); }
-  section#architecture::before  { background: rgba(245,158, 11,0.026); }
-  section#impact::before        { background: rgba( 56,189,248,0.030); }
-  section#workflow::before      { background: rgba(255,255,255,0.020); }
-  section#experience::before    { background: rgba(245,158, 11,0.026); }
-  section#skills::before        { background: rgba( 56,189,248,0.030); }
-  section#stack::before         { background: rgba(255,255,255,0.020); }
-  section#capabilities::before  { background: rgba(245,158, 11,0.026); }
-  section#contact::before       { background: rgba( 56,189,248,0.040); }
+  /* ---- Per-section moods ----
+     Base tint (::before) keeps the cool/neutral/warm rhythm at low intensity.
+     Accent glow (::after) is a single radial per section, positioned top-center
+     or top-left — never opposing corners.
+     Quiet sections (Skills, Core Stack) intentionally disable the glow so the
+     dense cards read clearly and create breathing room between emphasis
+     sections. */
+
+  /* --- Primary emphasis sections (slightly stronger presence) --- */
+
+  /* Platform (hero): cyan top-down fade */
+  section#platform::before {
+    background:
+      linear-gradient(180deg, rgba(56,189,248,0.040) 0%, rgba(56,189,248,0.008) 60%, transparent 100%);
+  }
+  section#platform::after {
+    background:
+      radial-gradient(ellipse 60% 45% at 50% 0%, rgba(56,189,248,0.08), transparent 65%);
+  }
+
+  /* Live Demo: subtle pearl base, cyan focal top-center */
+  section#demo::before {
+    background:
+      linear-gradient(180deg, rgba(148,163,184,0.014) 0%, rgba(148,163,184,0.022) 55%, rgba(148,163,184,0.010) 100%);
+  }
+  section#demo::after {
+    background:
+      radial-gradient(ellipse 55% 40% at 50% 0%, rgba(56,189,248,0.07), transparent 65%);
+  }
+
+  /* Architecture: warm amber, focal top-left */
+  section#architecture::before {
+    background:
+      linear-gradient(180deg, rgba(245,158,11,0.020) 0%, rgba(245,158,11,0.008) 60%, transparent 100%);
+  }
+  section#architecture::after {
+    background:
+      radial-gradient(ellipse 55% 45% at 20% 0%, rgba(245,158,11,0.07), transparent 65%);
+  }
+
+  /* Impact: cool cyan focal, top-center */
+  section#impact::before {
+    background:
+      linear-gradient(180deg, rgba(56,189,248,0.022) 0%, rgba(56,189,248,0.006) 60%, transparent 100%);
+  }
+  section#impact::after {
+    background:
+      radial-gradient(ellipse 55% 40% at 50% 0%, rgba(56,189,248,0.07), transparent 65%);
+  }
+
+  /* Workflow: same cool family, focal top-left for variation */
+  section#workflow::before {
+    background:
+      linear-gradient(180deg, rgba(56,189,248,0.022) 0%, rgba(56,189,248,0.006) 60%, transparent 100%);
+  }
+  section#workflow::after {
+    background:
+      radial-gradient(ellipse 55% 45% at 20% 0%, rgba(56,189,248,0.07), transparent 65%);
+  }
+
+  /* --- Normal sections (soft single focal) --- */
+
+  /* Experience: warm amber timeline, focal top-left */
+  section#experience::before {
+    background:
+      linear-gradient(180deg, rgba(245,158,11,0.018) 0%, rgba(245,158,11,0.006) 60%, transparent 100%);
+  }
+  section#experience::after {
+    background:
+      radial-gradient(ellipse 55% 45% at 20% 0%, rgba(245,158,11,0.06), transparent 65%);
+  }
+
+  /* Capabilities: warm amber, focal top-center */
+  section#capabilities::before {
+    background:
+      linear-gradient(180deg, rgba(245,158,11,0.020) 0%, rgba(245,158,11,0.006) 60%, transparent 100%);
+  }
+  section#capabilities::after {
+    background:
+      radial-gradient(ellipse 55% 40% at 50% 0%, rgba(245,158,11,0.06), transparent 65%);
+  }
+
+  /* Contact (final): cyan to close out — slightly warmer presence */
+  section#contact::before {
+    background:
+      linear-gradient(180deg, rgba(56,189,248,0.025) 0%, rgba(56,189,248,0.012) 60%, rgba(56,189,248,0.006) 100%);
+  }
+  section#contact::after {
+    background:
+      radial-gradient(ellipse 60% 45% at 50% 0%, rgba(56,189,248,0.08), transparent 65%);
+  }
+
+  /* --- Quiet sections (base only, glow disabled for breathing room) --- */
+
+  /* Skills matrix — dense cards; keep background whisper-quiet. */
+  section#skills::before {
+    background:
+      linear-gradient(180deg, rgba(56,189,248,0.010) 0%, rgba(56,189,248,0.016) 55%, rgba(56,189,248,0.006) 100%);
+  }
+  section#skills::after { display: none; }
+
+  /* Core Languages & Platforms — dense chips; same treatment. */
+  section#stack::before {
+    background:
+      linear-gradient(180deg, rgba(148,163,184,0.010) 0%, rgba(148,163,184,0.018) 55%, rgba(148,163,184,0.008) 100%);
+  }
+  section#stack::after { display: none; }
 
   /* ============ PANELS ============ */
   .panel {
@@ -2550,6 +2664,12 @@
           );
         };
 
+        // Only wire hover tooltips on true pointer devices — touchscreens
+        // (phones/tablets) would flash tooltips on every tap and sit on top
+        // of the popup we're trying to open.
+        const hasHover = typeof window !== 'undefined' &&
+          window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+
         const markers = slice.map(e => {
           const c = CATEGORIES[e.cat] || CATEGORIES.Other;
           const html = '<div class="map-marker" style="background:' + c.color + '">' +
@@ -2558,19 +2678,21 @@
           const icon = L.divIcon({ html, className: '', iconSize: [30, 30], iconAnchor: [15, 15] });
           const m = L.marker([e.lat, e.lng], { icon });
           m.eventData = e;
-          m.on('mouseover', () => {
-            const el = m._icon;
-            if (!el) return;
-            const r = el.getBoundingClientRect();
-            setHoverTip({
-              html: buildEventTip(e),
-              x: r.left + r.width / 2,
-              y: r.top,
-              w: r.width,
-              h: r.height,
+          if (hasHover) {
+            m.on('mouseover', () => {
+              const el = m._icon;
+              if (!el) return;
+              const r = el.getBoundingClientRect();
+              setHoverTip({
+                html: buildEventTip(e),
+                x: r.left + r.width / 2,
+                y: r.top,
+                w: r.width,
+                h: r.height,
+              });
             });
-          });
-          m.on('mouseout', () => setHoverTip(null));
+            m.on('mouseout', () => setHoverTip(null));
+          }
           m.on('click', () => { setHoverTip(null); onSelect(e); });
           return m;
         });
@@ -2639,11 +2761,17 @@
           });
         };
         const onClusterOut = () => setHoverTip(null);
-        clusterRef.current.on('clustermouseover', onClusterHover);
-        clusterRef.current.on('clustermouseout',  onClusterOut);
+        // Only wire cluster hover on true pointer devices (same reason as
+        // individual markers — avoid flashing tooltips on touchscreen taps).
+        const hasHoverCluster = typeof window !== 'undefined' &&
+          window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+        if (hasHoverCluster) {
+          clusterRef.current.on('clustermouseover', onClusterHover);
+          clusterRef.current.on('clustermouseout',  onClusterOut);
+        }
 
         return () => {
-          if (clusterRef.current) {
+          if (clusterRef.current && hasHoverCluster) {
             clusterRef.current.off('clustermouseover', onClusterHover);
             clusterRef.current.off('clustermouseout',  onClusterOut);
           }
@@ -3820,9 +3948,7 @@
                     <span
                       key={chip}
                       className="px-2 py-0.5 rounded-md text-[10.5px] font-mono text-slate-300 bg-ink-900/70 border border-ink-700/60 hover:border-evo-cyan/40 hover:text-slate-100 transition-colors"
-                    >
-                      {chip}
-                    </span>
+                    >{chip}</span>
                   ))}
                 </div>
               </div>
