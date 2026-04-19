@@ -209,14 +209,50 @@
 
   /* --- Normal sections (soft single focal) --- */
 
-  /* Experience: warm amber timeline, focal top-left */
+  /* Experience / Platform Evolution: polished steel silver band.
+     Two layers on ::before — a vertical steel gradient (light top → mid → dark)
+     and a brushed-metal horizontal sheen at the edges — to evoke a brushed
+     silver plate without overpowering the dark page. ::after adds a soft
+     silver shine at the top. */
   section#experience::before {
+    border-top: 1px solid rgba(226,232,240,0.10);
+    border-bottom: 1px solid rgba(148,163,184,0.08);
     background:
-      linear-gradient(180deg, rgba(245,158,11,0.018) 0%, rgba(245,158,11,0.006) 60%, transparent 100%);
+      linear-gradient(90deg, rgba(255,255,255,0.025) 0%, rgba(255,255,255,0.00) 28%, rgba(255,255,255,0.00) 72%, rgba(255,255,255,0.025) 100%),
+      linear-gradient(180deg, rgba(226,232,240,0.11) 0%, rgba(148,163,184,0.07) 45%, rgba(71,85,105,0.05) 100%);
   }
   section#experience::after {
+    opacity: 0.55;
     background:
-      radial-gradient(ellipse 55% 45% at 20% 0%, rgba(245,158,11,0.06), transparent 65%);
+      radial-gradient(ellipse 65% 40% at 50% 0%, rgba(226,232,240,0.16), transparent 65%),
+      radial-gradient(ellipse 40% 30% at 80% 100%, rgba(148,163,184,0.10), transparent 70%);
+  }
+  /* Silver gradient eyebrow + heading treatments for Platform Evolution */
+  section#experience .silver-eyebrow {
+    background-image: linear-gradient(90deg, #e5e7eb 0%, #94a3b8 50%, #e5e7eb 100%);
+    -webkit-background-clip: text;
+            background-clip: text;
+    -webkit-text-fill-color: transparent;
+            color: transparent;
+    letter-spacing: 0.22em;
+  }
+  section#experience .silver-title {
+    background-image: linear-gradient(180deg, #f8fafc 0%, #cbd5e1 55%, #94a3b8 100%);
+    -webkit-background-clip: text;
+            background-clip: text;
+    -webkit-text-fill-color: transparent;
+            color: transparent;
+    text-shadow: 0 1px 0 rgba(255,255,255,0.04);
+  }
+  /* Vertical timeline rail — brushed silver fade */
+  section#experience .timeline-rail {
+    background: linear-gradient(180deg,
+      rgba(226,232,240,0.02) 0%,
+      rgba(203,213,225,0.35) 10%,
+      rgba(148,163,184,0.55) 50%,
+      rgba(203,213,225,0.35) 90%,
+      rgba(226,232,240,0.02) 100%);
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.04);
   }
 
   /* Capabilities: warm amber, focal top-center */
@@ -565,11 +601,46 @@
        module-level counter `expectedSilentPops` so B's listener can recognize
        and ignore that internally-triggered popstate. */
     let expectedSilentPops = 0;
+
+    /* Ref-counted body scroll lock shared across all popups. When the first
+       popup mounts we freeze the body; when the last one unmounts we restore
+       the previous styles and the prior scrollY. Using a counter lets stacked
+       popups (A opens B) keep the lock continuously rather than flickering. */
+    let scrollLockCount = 0;
+    let savedScroll = { y: 0, overflow: '', paddingRight: '' };
+    function acquireScrollLock() {
+      if (typeof document === 'undefined') return;
+      if (scrollLockCount === 0) {
+        const body = document.body;
+        const html = document.documentElement;
+        savedScroll.y = window.scrollY || window.pageYOffset || 0;
+        savedScroll.overflow = body.style.overflow;
+        savedScroll.paddingRight = body.style.paddingRight;
+        // Preserve space for the removed scrollbar so the layout doesn't shift.
+        const sbw = window.innerWidth - html.clientWidth;
+        if (sbw > 0) body.style.paddingRight = sbw + 'px';
+        body.style.overflow = 'hidden';
+      }
+      scrollLockCount += 1;
+    }
+    function releaseScrollLock() {
+      if (typeof document === 'undefined') return;
+      scrollLockCount = Math.max(0, scrollLockCount - 1);
+      if (scrollLockCount === 0) {
+        const body = document.body;
+        body.style.overflow = savedScroll.overflow || '';
+        body.style.paddingRight = savedScroll.paddingRight || '';
+      }
+    }
+
     function useEscape(onClose, active = true) {
       useEffect(() => {
         if (!active) return;
         const onKey = (ev) => { if (ev.key === 'Escape') onClose(); };
         window.addEventListener('keydown', onKey);
+
+        // Freeze the page behind the popup while it is mounted.
+        acquireScrollLock();
 
         // Push a unique marker into history so back navigation pops it.
         const marker = { __popupMarker: Date.now() + Math.random() };
@@ -591,6 +662,7 @@
         return () => {
           window.removeEventListener('keydown', onKey);
           window.removeEventListener('popstate', onPop);
+          releaseScrollLock();
           // If the popup is closing for reasons other than back-button
           // (ESC / X / backdrop / unmount), unwind the marker we pushed.
           if (!poppedByBack) {
@@ -1678,8 +1750,23 @@
                 using representative CAD data in a non-production environment.
               </p>
             </div>
-            <button onClick={() => setShowEvoAi(true)} className="evo-btn">
-              <Icon name="sparkle" className="w-4 h-4" /> Open EVO AI
+            <button
+              type="button"
+              onClick={() => setShowEvoAi(true)}
+              className="evo-btn-open-ai group relative inline-flex items-center gap-2 px-5 py-3 rounded-lg font-semibold text-sm tracking-wide text-white/95 border shadow-[0_3px_14px_rgba(180,80,20,0.22)] hover:shadow-[0_4px_18px_rgba(180,80,20,0.32)] transition-all overflow-hidden"
+              style={{
+                background: 'linear-gradient(135deg, #B56A17 0%, #C05B1E 50%, #9A4410 100%)',
+                borderColor: 'rgba(220,150,95,0.35)'
+              }}
+              aria-label="Open EVO AI"
+            >
+              <span aria-hidden="true" className="absolute inset-0 pointer-events-none" style={{background: 'linear-gradient(180deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.00) 50%)'}}></span>
+              <span aria-hidden="true" className="absolute -left-10 top-0 w-10 h-full bg-white/10 skew-x-12 transition-transform duration-700 ease-out group-hover:translate-x-[260px]"></span>
+              <span className="relative inline-flex w-6 h-6 items-center justify-center rounded-md bg-white/10 border border-white/15">
+                <Icon name="sparkle" className="w-3.5 h-3.5 text-white/90" />
+              </span>
+              <span className="relative uppercase tracking-[0.14em] text-[12.5px]">Open EVO AI</span>
+              <span className="relative inline-flex items-center ml-0.5 text-white/75 text-xs">&rsaquo;</span>
             </button>
           </div>
 
@@ -2882,10 +2969,404 @@
       return map[iconName] || map.info;
     }
 
+    /* ============ EVO AI · FULL SEARCH VIEW ============ */
+    function EvoFullSearchView({ events, meta, onBack, onRunQuery }) {
+      // Aggregate interesting dimensions across the entire dataset so the user
+      // sees a richer "beyond keyword" overview of what the platform knows.
+      const stats = useMemo(() => {
+        const hourHist = new Array(24).fill(0);
+        const dowHist = new Array(7).fill(0);
+        const sevHist = [0,0,0,0,0];
+        const cats = {};
+        const dists = {};
+        const agencies = {};
+        let minT = Infinity, maxT = -Infinity;
+        let geoCount = 0;
+        for (const e of events) {
+          if (e.dt) {
+            const t = new Date(e.dt).getTime();
+            if (!isNaN(t)) {
+              if (t < minT) minT = t;
+              if (t > maxT) maxT = t;
+              const d = new Date(t);
+              hourHist[d.getHours()] += 1;
+              dowHist[d.getDay()] += 1;
+            }
+          }
+          if (e.sev >= 0 && e.sev <= 4) sevHist[e.sev] += 1;
+          cats[e.cat] = (cats[e.cat] || 0) + 1;
+          if (e.dist) dists[e.dist] = (dists[e.dist] || 0) + 1;
+          if (e.agency) agencies[e.agency] = (agencies[e.agency] || 0) + 1;
+          if (e.lat != null && e.lng != null) geoCount += 1;
+        }
+        const topN = (o, n) => Object.entries(o).sort((a,b) => b[1]-a[1]).slice(0, n);
+        return {
+          hourHist, dowHist, sevHist,
+          topCats: topN(cats, 6),
+          topDists: topN(dists, 6),
+          topAgencies: topN(agencies, 4),
+          minT: isFinite(minT) ? minT : null,
+          maxT: isFinite(maxT) ? maxT : null,
+          geoCount,
+          total: events.length,
+        };
+      }, [events]);
+
+      const hourMax = Math.max(1, ...stats.hourHist);
+      const dowLabels = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+      const dowMax = Math.max(1, ...stats.dowHist);
+      const sevColors = ['#475569','#f59e0b','#ff7b29','#ef4444','#dc2626'];
+      const sevLabels = ['Info','Low','Med','High','Critical'];
+      const fmtDate = (t) => t ? new Date(t).toLocaleDateString(undefined, {year:'numeric', month:'short', day:'numeric'}) : '—';
+
+      return (
+        <div className="mt-4">
+          <div className="flex items-center gap-2 mb-3">
+            <button type="button" onClick={onBack} className="text-[11px] font-mono text-slate-400 hover:text-evo-cyan">&lsaquo; Back</button>
+            <span className="text-[11px] font-mono text-evo-orange uppercase tracking-widest">Full Search · Additional Dimensions</span>
+            <span className="ml-auto text-[10px] text-slate-400 font-mono">{stats.total.toLocaleString()} indexed events</span>
+          </div>
+          <div className="max-h-[460px] overflow-y-auto pr-2 space-y-3">
+            {/* Coverage strip */}
+            <div className="grid grid-cols-3 gap-2">
+              <div className="bg-ink-900 border border-ink-700/50 rounded-md px-3 py-2">
+                <div className="text-[9px] uppercase tracking-widest text-slate-500 font-mono">Date Range</div>
+                <div className="text-[12px] font-semibold text-slate-100 mt-0.5">{fmtDate(stats.minT)} &rarr; {fmtDate(stats.maxT)}</div>
+              </div>
+              <div className="bg-ink-900 border border-ink-700/50 rounded-md px-3 py-2">
+                <div className="text-[9px] uppercase tracking-widest text-slate-500 font-mono">Geo-Located</div>
+                <div className="text-[12px] font-semibold text-evo-cyan mt-0.5">{stats.geoCount.toLocaleString()} <span className="text-slate-500 font-mono text-[10px]">({stats.total > 0 ? Math.round(100 * stats.geoCount / stats.total) : 0}%)</span></div>
+              </div>
+              <div className="bg-ink-900 border border-ink-700/50 rounded-md px-3 py-2">
+                <div className="text-[9px] uppercase tracking-widest text-slate-500 font-mono">Narrative Index</div>
+                <div className="text-[12px] font-semibold text-emerald-400 mt-0.5">Enabled</div>
+              </div>
+            </div>
+
+            {/* Hour-of-day distribution */}
+            <div className="bg-ink-900 border border-ink-700/50 rounded-md px-3 py-3">
+              <div className="flex items-center gap-2 mb-2">
+                <Icon name="clock" className="w-3.5 h-3.5 text-evo-cyan" />
+                <div className="text-[11px] font-mono uppercase tracking-widest text-slate-300">Hour of Day</div>
+                <span className="ml-auto text-[10px] font-mono text-slate-500">24h bins</span>
+              </div>
+              <div className="flex items-end gap-[2px] h-20">
+                {stats.hourHist.map((v, i) => {
+                  const h = Math.max(2, Math.round((v / hourMax) * 76));
+                  const peak = v === hourMax && v > 0;
+                  return (
+                    <div key={i} className="flex-1 flex flex-col items-center justify-end" title={i + ':00 · ' + v.toLocaleString()}>
+                      <div style={{height: h + 'px', background: peak ? '#38BDF8' : 'rgba(56,189,248,0.35)'}} className="w-full rounded-t"></div>
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="flex justify-between text-[9px] font-mono text-slate-500 mt-1">
+                <span>00</span><span>06</span><span>12</span><span>18</span><span>23</span>
+              </div>
+            </div>
+
+            {/* Day of week */}
+            <div className="bg-ink-900 border border-ink-700/50 rounded-md px-3 py-3">
+              <div className="flex items-center gap-2 mb-2">
+                <Icon name="list" className="w-3.5 h-3.5 text-evo-amber" />
+                <div className="text-[11px] font-mono uppercase tracking-widest text-slate-300">Day of Week</div>
+              </div>
+              <div className="space-y-1">
+                {stats.dowHist.map((v, i) => {
+                  const pct = (v / dowMax) * 100;
+                  return (
+                    <div key={i} className="flex items-center gap-2 text-[11px]">
+                      <span className="w-8 font-mono text-slate-500">{dowLabels[i]}</span>
+                      <div className="flex-1 h-2 bg-ink-800/70 rounded">
+                        <div style={{width: pct + '%', background: 'linear-gradient(90deg,#F59E0B,#EF4444)'}} className="h-2 rounded"></div>
+                      </div>
+                      <span className="w-14 text-right font-mono text-slate-400">{v.toLocaleString()}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Severity distribution */}
+            <div className="bg-ink-900 border border-ink-700/50 rounded-md px-3 py-3">
+              <div className="flex items-center gap-2 mb-2">
+                <Icon name="alert" className="w-3.5 h-3.5 text-evo-orange" />
+                <div className="text-[11px] font-mono uppercase tracking-widest text-slate-300">Severity Profile</div>
+              </div>
+              <div className="flex h-4 rounded overflow-hidden border border-ink-700/40">
+                {stats.sevHist.map((v, i) => {
+                  const pct = stats.total > 0 ? (v / stats.total) * 100 : 0;
+                  if (pct < 0.5) return null;
+                  return <div key={i} style={{width: pct + '%', background: sevColors[i]}} title={sevLabels[i] + ': ' + v.toLocaleString()}></div>;
+                })}
+              </div>
+              <div className="flex flex-wrap gap-3 mt-2 text-[10px] font-mono">
+                {stats.sevHist.map((v, i) => (
+                  <span key={i} className="inline-flex items-center gap-1.5 text-slate-400">
+                    <span className="w-2 h-2 rounded-sm" style={{background: sevColors[i]}}></span>
+                    {sevLabels[i]} <span className="text-slate-500">{v.toLocaleString()}</span>
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            {/* Top categories & districts */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="bg-ink-900 border border-ink-700/50 rounded-md px-3 py-3">
+                <div className="text-[11px] font-mono uppercase tracking-widest text-slate-300 mb-2">Top Categories</div>
+                <div className="space-y-1.5">
+                  {stats.topCats.map(([k, v]) => {
+                    const c = CATEGORIES[k] || CATEGORIES.Other;
+                    return (
+                      <button key={k} type="button" onClick={() => onRunQuery(k)} className="w-full flex items-center gap-2 text-[11px] hover:bg-ink-800/60 rounded px-1 py-0.5 transition-colors">
+                        <span className="w-2 h-2 rounded-sm" style={{background: c.color}}></span>
+                        <span className="text-slate-200 truncate">{c.label}</span>
+                        <span className="ml-auto font-mono text-slate-500">{v.toLocaleString()}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+              <div className="bg-ink-900 border border-ink-700/50 rounded-md px-3 py-3">
+                <div className="text-[11px] font-mono uppercase tracking-widest text-slate-300 mb-2">Top Districts</div>
+                <div className="space-y-1.5">
+                  {stats.topDists.length === 0 && <div className="text-[10px] text-slate-500 font-mono">No district data</div>}
+                  {stats.topDists.map(([k, v]) => (
+                    <button key={k} type="button" onClick={() => onRunQuery(k)} className="w-full flex items-center gap-2 text-[11px] hover:bg-ink-800/60 rounded px-1 py-0.5 transition-colors">
+                      <span className="font-mono text-evo-cyan">{k}</span>
+                      <span className="ml-auto font-mono text-slate-500">{v.toLocaleString()}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Agencies */}
+            {stats.topAgencies.length > 0 && (
+              <div className="bg-ink-900 border border-ink-700/50 rounded-md px-3 py-3">
+                <div className="text-[11px] font-mono uppercase tracking-widest text-slate-300 mb-2">Reporting Agencies</div>
+                <div className="flex flex-wrap gap-1.5">
+                  {stats.topAgencies.map(([k, v]) => (
+                    <span key={k} className="inline-flex items-center gap-1.5 bg-ink-800/60 border border-ink-700/50 rounded-full px-2.5 py-1 text-[10px] font-mono text-slate-300">
+                      <span className="text-evo-cyan">{k}</span>
+                      <span className="text-slate-500">{v.toLocaleString()}</span>
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="text-[10px] font-mono text-slate-500 pt-1 pb-2">
+              Tip: click any category or district row above to seed a keyword search.
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    /* ============ EVO AI · PROXIMITY VIEW ============ */
+    function EvoProximityView({ events, onSelect, onBack }) {
+      const mapRef = useRef(null);
+      const mapInst = useRef(null);
+      const [hoverTip, setHoverTip] = useState(null);
+      // Downtown DC centroid (roughly the White House area)
+      const CENTER = [38.9072, -77.0369];
+      const RADIUS_MI = 3;
+      const RADIUS_M = RADIUS_MI * 1609.34;
+
+      // Haversine distance in meters
+      const dist = (a, b) => {
+        const toRad = (d) => d * Math.PI / 180;
+        const R = 6371000;
+        const dLat = toRad(b[0] - a[0]);
+        const dLng = toRad(b[1] - a[1]);
+        const lat1 = toRad(a[0]);
+        const lat2 = toRad(b[0]);
+        const h = Math.sin(dLat/2) ** 2 + Math.sin(dLng/2) ** 2 * Math.cos(lat1) * Math.cos(lat2);
+        return 2 * R * Math.asin(Math.min(1, Math.sqrt(h)));
+      };
+
+      const within = useMemo(() => {
+        const out = [];
+        for (const e of events) {
+          if (e.lat == null || e.lng == null) continue;
+          if (dist(CENTER, [e.lat, e.lng]) <= RADIUS_M) out.push(e);
+          if (out.length >= 600) break;
+        }
+        return out;
+      }, [events]);
+
+      // Category breakdown within radius (for sidebar chips)
+      const catBreakdown = useMemo(() => {
+        const c = {};
+        for (const e of within) c[e.cat] = (c[e.cat] || 0) + 1;
+        return Object.entries(c).sort((a,b) => b[1]-a[1]).slice(0, 8);
+      }, [within]);
+
+      useEffect(() => {
+        if (!mapRef.current) return;
+        const map = L.map(mapRef.current, {
+          center: CENTER,
+          zoom: 12,
+          zoomControl: true,
+          preferCanvas: true,
+        });
+        mapInst.current = map;
+
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+          attribution: '&copy; OpenStreetMap, &copy; CARTO',
+          subdomains: 'abcd',
+          maxZoom: 19,
+        }).addTo(map);
+
+        // Circle: 3 mi radius
+        const circle = L.circle(CENTER, {
+          radius: RADIUS_M,
+          color: '#38BDF8',
+          weight: 2,
+          opacity: 0.75,
+          dashArray: '6,5',
+          fillColor: '#38BDF8',
+          fillOpacity: 0.06,
+        }).addTo(map);
+
+        // Center pin (small crosshair)
+        L.marker(CENTER, {
+          icon: L.divIcon({
+            html: '<div style="width:14px;height:14px;border-radius:50%;background:#38BDF8;border:2px solid #0B1018;box-shadow:0 0 8px rgba(56,189,248,0.8);"></div>',
+            className: '',
+            iconSize: [14,14],
+            iconAnchor: [7,7],
+          }),
+          interactive: false,
+        }).addTo(map);
+
+        // Fit map to circle bounds
+        try { map.fitBounds(circle.getBounds().pad(0.1)); } catch (_) {}
+
+        return () => map.remove();
+      }, []);
+
+      useEffect(() => {
+        const map = mapInst.current;
+        if (!map) return;
+
+        const escHtml = (s) => String(s == null ? '' : s)
+          .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        const sevColors = ['#475569','#f59e0b','#ff7b29','#ef4444','#dc2626'];
+        const fmtTime = (iso) => {
+          if (!iso) return '';
+          const d = new Date(iso);
+          if (isNaN(d.getTime())) return '';
+          const mo = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()];
+          let h = d.getHours();
+          const mm = String(d.getMinutes()).padStart(2, '0');
+          const ap = h >= 12 ? 'PM' : 'AM';
+          h = h % 12; if (h === 0) h = 12;
+          return mo + ' ' + d.getDate() + ', ' + h + ':' + mm + ' ' + ap;
+        };
+        const buildTip = (e) => {
+          const c = CATEGORIES[e.cat] || CATEGORIES.Other;
+          const sevC = sevColors[e.sev] || sevColors[0];
+          const addr = e.addr || '';
+          const cityLine = [e.city, e.state].filter(Boolean).join(', ');
+          const locLine = addr ? escHtml(addr) + (cityLine ? '<br/><span style="color:#64748B">' + escHtml(cityLine) + '</span>' : '') : escHtml(cityLine || '–');
+          return (
+            '<div class="command-tip">' +
+              '<div class="command-tip-head">' +
+                '<span class="command-tip-dot" style="background:' + c.color + '"></span>' +
+                '<div class="command-tip-title">' + escHtml(e.label || 'Event') + '</div>' +
+              '</div>' +
+              '<div class="command-tip-row">' +
+                '<span class="command-tip-key">Category</span>' +
+                '<span class="command-tip-val">' + escHtml(c.label) + '</span>' +
+              '</div>' +
+              '<div class="command-tip-row">' +
+                '<span class="command-tip-key">Severity</span>' +
+                '<span class="command-tip-val" style="color:' + sevC + ';font-weight:600">' + (e.sev != null ? e.sev : '–') + (e.sevTxt ? ' · ' + escHtml(e.sevTxt) : '') + '</span>' +
+              '</div>' +
+              '<div class="command-tip-row">' +
+                '<span class="command-tip-key">Location</span>' +
+                '<span class="command-tip-val">' + locLine + '</span>' +
+              '</div>' +
+              (e.dt ? '<div class="command-tip-row">' +
+                '<span class="command-tip-key">Time</span>' +
+                '<span class="command-tip-val mono">' + escHtml(fmtTime(e.dt)) + '</span>' +
+              '</div>' : '') +
+              '<div class="command-tip-hint">click to open</div>' +
+            '</div>'
+          );
+        };
+
+        const hasHover = typeof window !== 'undefined' &&
+          window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+
+        const markers = within.map(e => {
+          const c = CATEGORIES[e.cat] || CATEGORIES.Other;
+          const html = '<div class="map-marker" style="background:' + c.color + '">' +
+                       markerSvg(c.icon) + '</div>';
+          const icon = L.divIcon({ html, className: '', iconSize: [26, 26], iconAnchor: [13, 13] });
+          const m = L.marker([e.lat, e.lng], { icon });
+          if (hasHover) {
+            m.on('mouseover', () => {
+              const el = m._icon;
+              if (!el) return;
+              const r = el.getBoundingClientRect();
+              setHoverTip({
+                html: buildTip(e),
+                x: r.left + r.width / 2,
+                y: r.top,
+                w: r.width,
+                h: r.height,
+              });
+            });
+            m.on('mouseout', () => setHoverTip(null));
+          }
+          m.on('click', () => { setHoverTip(null); onSelect(e); });
+          m.addTo(map);
+          return m;
+        });
+
+        return () => {
+          for (const m of markers) map.removeLayer(m);
+        };
+      }, [within, onSelect]);
+
+      return (
+        <div className="mt-4">
+          <div className="flex items-center gap-2 mb-2">
+            <button type="button" onClick={onBack} className="text-[11px] font-mono text-slate-400 hover:text-evo-cyan">&lsaquo; Back</button>
+            <span className="text-[11px] font-mono text-evo-cyan uppercase tracking-widest">Proximity · {RADIUS_MI} mi · Downtown DC</span>
+            <span className="ml-auto text-[10px] text-slate-400 font-mono">{within.length.toLocaleString()} within radius</span>
+          </div>
+          <div ref={mapRef} style={{height: 420}} className="w-full rounded-lg border border-ink-700/50 overflow-hidden"></div>
+          {catBreakdown.length > 0 && (
+            <div className="mt-3 flex items-center gap-1.5 flex-wrap">
+              {catBreakdown.map(([cat, n]) => {
+                const c = CATEGORIES[cat] || CATEGORIES.Other;
+                return (
+                  <span key={cat} className="inline-flex items-center gap-1.5 bg-ink-900 border border-ink-700/50 rounded-full px-2.5 py-1 text-[10px] font-mono text-slate-300" title={c.label}>
+                    <span className="w-2 h-2 rounded-sm" style={{background: c.color}}></span>
+                    {c.label} <span className="text-slate-500">{n}</span>
+                  </span>
+                );
+              })}
+            </div>
+          )}
+          <div className="text-[10px] font-mono text-slate-500 mt-2">
+            Hover any marker for event details &middot; click to open the full case card.
+          </div>
+          {hoverTip && <MapTooltipPortal tip={hoverTip} />}
+        </div>
+      );
+    }
+
     /* ============ EVO AI PANEL ============ */
     function EvoAiPanel({ events, meta, enriched, onClose, onSelect }) {
       const [query, setQuery] = useState('');
-      const [view, setView] = useState('home'); // 'home' | 'results'
+      const [view, setView] = useState('home'); // 'home' | 'results' | 'full' | 'proximity'
       const [searchNarratives, setSearchNarratives] = useState(true);
       const inputRef = useRef(null);
 
@@ -2912,33 +3393,61 @@
         }).slice(0, 100);
       }, [query, events, enriched, searchNarratives]);
 
-      useEffect(() => { setView(query.trim() ? 'results' : 'home'); }, [query]);
+      useEffect(() => {
+        if (query.trim()) { setView('results'); return; }
+        // When the query is cleared, only return home from 'results'.
+        // Leave 'full'/'proximity' alone so those views don't snap out.
+        setView((v) => (v === 'results' ? 'home' : v));
+      }, [query]);
 
       const cc = meta.categoryCounts || {};
       const watchlists = [
-        { name: 'Shooting Keywords', tag: 'My Custom', count: cc.Shooting || 0 },
-        { name: 'BOLOs On File', tag: 'My Custom', count: (meta.sectionCounts && meta.sectionCounts.bolos) || 0 },
-        { name: 'ShotSpotter Activations', tag: 'Agency-Wide', count: (meta.sectionCounts && meta.sectionCounts.shotspots) || 0 },
-        { name: 'Mental Health Calls', tag: 'Agency-Wide', count: cc['Mental Health'] || 0 },
-        { name: 'Domestic Violence', tag: 'Agency-Wide', count: cc.Domestic || 0 },
-        { name: 'Robbery & Burglary', tag: 'Agency-Wide', count: (cc.Robbery || 0) + (cc.Burglary || 0) },
-        { name: 'Auto Theft Pattern', tag: 'My Custom', count: cc['Auto Theft'] || 0 },
-        { name: 'Test All', tag: 'My Custom', count: meta.totalKept || meta.totalSampled || 0 },
+        { name: 'Shooting Keywords', tag: 'My Custom', count: cc.Shooting || 0, query: 'Shooting' },
+        { name: 'BOLOs On File', tag: 'My Custom', count: (meta.sectionCounts && meta.sectionCounts.bolos) || 0, query: 'BOLO' },
+        { name: 'ShotSpotter Activations', tag: 'Agency-Wide', count: (meta.sectionCounts && meta.sectionCounts.shotspots) || 0, query: 'Fired' },
+        { name: 'Mental Health Calls', tag: 'Agency-Wide', count: cc['Mental Health'] || 0, query: 'Mental' },
+        { name: 'Domestic Violence', tag: 'Agency-Wide', count: cc.Domestic || 0, query: 'Domestic' },
+        { name: 'Robbery & Burglary', tag: 'Agency-Wide', count: (cc.Robbery || 0) + (cc.Burglary || 0), query: 'Robbery' },
+        { name: 'Auto Theft Pattern', tag: 'My Custom', count: cc['Auto Theft'] || 0, query: 'Theft' },
+        { name: 'Test All', tag: 'My Custom', count: meta.totalKept || meta.totalSampled || 0, query: 'Test' },
       ];
+
+      const runWatchlist = (w) => {
+        setQuery(w.query || w.name);
+        if (inputRef.current) {
+          try { inputRef.current.focus(); } catch (_) {}
+        }
+      };
 
       return (
         <div className="fixed inset-0 z-[9999] modal-backdrop flex items-start justify-center p-4 md:p-12 overflow-y-auto" onClick={onClose}>
           <div className="panel w-full max-w-3xl" onClick={e => e.stopPropagation()}>
-            <div className="px-6 pt-6 pb-2 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-evo-amber/15 border border-evo-amber/30 flex items-center justify-center">
-                  <Icon name="sparkle" className="w-5 h-5 text-white" />
+            <div className="evo-ai-header relative overflow-hidden px-5 py-3.5 flex items-center justify-between border-b border-ink-700/70 rounded-t-xl" style={{background: 'linear-gradient(180deg, rgba(245,158,11,0.10) 0%, rgba(255,123,41,0.06) 45%, rgba(15,20,28,0.0) 100%), linear-gradient(180deg, #12161D 0%, #0D1117 100%)'}}>
+              {/* top accent line */}
+              <div aria-hidden="true" className="absolute inset-x-0 top-0 h-[2px]" style={{background: 'linear-gradient(90deg, transparent 0%, #F59E0B 18%, #FF7B29 50%, #F59E0B 82%, transparent 100%)', opacity: 0.85}}></div>
+              {/* subtle inner highlight */}
+              <div aria-hidden="true" className="absolute inset-x-0 top-[2px] h-[1px] bg-white/[0.04]"></div>
+              {/* faint radial glow behind logo */}
+              <div aria-hidden="true" className="absolute left-0 top-0 w-56 h-full" style={{background: 'radial-gradient(ellipse 40% 80% at 15% 50%, rgba(245,158,11,0.18), transparent 70%)', pointerEvents: 'none'}}></div>
+
+              <div className="relative flex items-center gap-3">
+                <div className="w-11 h-11 rounded-lg flex items-center justify-center shadow-[0_2px_10px_rgba(245,158,11,0.25)] border border-evo-amber/50" style={{background: 'linear-gradient(135deg, rgba(245,158,11,0.35) 0%, rgba(255,123,41,0.20) 100%)'}}>
+                  <Icon name="sparkle" className="w-5 h-5 text-evo-amber" />
                 </div>
-                <div>
-                  <div className="font-display font-bold text-lg text-slate-100">Evo AI</div>
+                <div className="min-w-0">
+                  <div className="font-display font-bold text-[17px] leading-none text-slate-100 tracking-tight">Evo AI</div>
+                  <div className="mt-1 text-[10px] font-mono uppercase tracking-[0.18em] text-slate-400">Search <span className="text-slate-600">&middot;</span> Analytics <span className="text-slate-600">&middot;</span> Proximity</div>
                 </div>
               </div>
-              <button onClick={onClose} className="text-slate-400 hover:text-white"><Icon name="x" className="w-5 h-5" /></button>
+              <div className="relative flex items-center gap-2">
+                <span className="hidden sm:inline-flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-widest text-emerald-400/90 bg-emerald-400/10 border border-emerald-400/25 rounded-full px-2 py-0.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                  Online
+                </span>
+                <button onClick={onClose} aria-label="Close" className="w-8 h-8 rounded-md border border-ink-700/70 bg-ink-900/60 text-slate-400 hover:text-white hover:border-evo-amber/50 hover:bg-ink-800/80 transition-colors flex items-center justify-center">
+                  <Icon name="x" className="w-4 h-4" />
+                </button>
+              </div>
             </div>
 
             <div className="px-6 pb-4">
@@ -2949,11 +3458,30 @@
                     value={query}
                     onChange={e => setQuery(e.target.value)}
                     placeholder="Ask EVO AI (e.g. shooting in district 1, traffic stop, BOLO)…"
-                    className="w-full bg-ink-900 border border-ink-700 rounded-lg px-4 py-3 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-evo-cyan/60"
+                    className="w-full bg-ink-900 border border-ink-700 rounded-lg px-4 py-3 pr-10 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-evo-cyan/60"
                   />
-                  <Icon name="search" className="w-4 h-4 absolute right-3 top-3.5 text-slate-500" />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setQuery('');
+                      setView('home');
+                      if (inputRef.current) {
+                        try { inputRef.current.focus(); } catch (_) {}
+                      }
+                    }}
+                    aria-label="Reset EVO AI"
+                    title="Reset to home"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-md flex items-center justify-center text-slate-400 hover:text-white hover:bg-ink-800/80 border border-transparent hover:border-ink-700 transition-colors"
+                  >
+                    <Icon name="x" className="w-3.5 h-3.5" />
+                  </button>
                 </div>
-                <button className="evo-btn primary px-4" aria-label="Run search">
+                <button
+                  type="button"
+                  onClick={() => { if (inputRef.current) { try { inputRef.current.focus(); } catch (_) {} } }}
+                  className="evo-btn primary px-4"
+                  aria-label="Focus search"
+                >
                   <Icon name="arrow" className="w-4 h-4" />
                 </button>
               </div>
@@ -2966,14 +3494,14 @@
               {view === 'home' && (
                 <>
                   <div className="grid grid-cols-2 gap-3 mt-4">
-                    <button className="evo-btn !p-3 !items-start text-left flex gap-2.5 min-w-0">
+                    <button type="button" onClick={() => setView('full')} className="evo-btn !p-3 !items-start text-left flex gap-2.5 min-w-0 hover:border-evo-orange/40">
                       <span className="cat-icon shrink-0" style={{background:'#ff7b29'}}><Icon name="search"/></span>
                       <span className="flex flex-col min-w-0 leading-tight">
                         <span className="text-sm font-semibold text-slate-100 whitespace-nowrap">Full Search <span className="text-slate-500">&rsaquo;</span></span>
-                        <span className="text-[11px] text-slate-400 mt-0.5 whitespace-nowrap">Up to 2 years</span>
+                        <span className="text-[11px] text-slate-400 mt-0.5 whitespace-nowrap">Additional dimensions</span>
                       </span>
                     </button>
-                    <button className="evo-btn !p-3 !items-start text-left flex gap-2.5 min-w-0">
+                    <button type="button" onClick={() => setView('proximity')} className="evo-btn !p-3 !items-start text-left flex gap-2.5 min-w-0 hover:border-evo-cyan/40">
                       <span className="cat-icon shrink-0" style={{background:'#06b6d4'}}><Icon name="compass"/></span>
                       <span className="flex flex-col min-w-0 leading-tight">
                         <span className="text-sm font-semibold text-slate-100 whitespace-nowrap">Proximity <span className="text-slate-500">&rsaquo;</span></span>
@@ -2990,7 +3518,15 @@
                     </div>
                     <div className="space-y-1.5 max-h-[360px] overflow-y-auto pr-2">
                       {watchlists.map((w, i) => (
-                        <div key={i} className="flex items-center gap-3 bg-ink-900 border border-ink-700/50 rounded-md px-3 py-2.5 hover:border-evo-cyan/40">
+                        <div
+                          key={i}
+                          role="button"
+                          tabIndex={0}
+                          onClick={() => runWatchlist(w)}
+                          onKeyDown={(ev) => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); runWatchlist(w); } }}
+                          title={`Search: ${w.query || w.name}`}
+                          className="flex items-center gap-3 bg-ink-900 border border-ink-700/50 rounded-md px-3 py-2.5 hover:border-evo-cyan/40 hover:bg-ink-800/60 cursor-pointer transition-colors focus:outline-none focus:border-evo-cyan/60"
+                        >
                           <div className="w-7 h-7 rounded-full bg-evo-cyan/15 border border-evo-cyan/30 flex items-center justify-center flex-shrink-0">
                             <Icon name="compass" className="w-3.5 h-3.5 text-evo-cyan" />
                           </div>
@@ -2998,11 +3534,11 @@
                             <div className="text-sm font-semibold text-slate-100 truncate">{w.name}</div>
                             <div className="text-[10px] text-slate-500 font-mono">{w.tag} · {w.count.toLocaleString()} matches</div>
                           </div>
-                          <div className="flex items-center gap-1.5 text-slate-500">
-                            <button className="p-1.5 hover:text-evo-cyan"><Icon name="chat" className="w-3.5 h-3.5"/></button>
-                            <button className="p-1.5 hover:text-evo-cyan"><Icon name="mail" className="w-3.5 h-3.5"/></button>
-                            <button className="p-1.5 hover:text-evo-cyan"><Icon name="list" className="w-3.5 h-3.5"/></button>
-                            <button className="p-1.5 hover:text-evo-orange"><Icon name="sparkle" className="w-3.5 h-3.5"/></button>
+                          <div className="flex items-center gap-1.5 text-slate-500" onClick={(ev) => ev.stopPropagation()}>
+                            <button className="p-1.5 hover:text-evo-cyan" onClick={(ev) => { ev.stopPropagation(); runWatchlist(w); }}><Icon name="chat" className="w-3.5 h-3.5"/></button>
+                            <button className="p-1.5 hover:text-evo-cyan" onClick={(ev) => { ev.stopPropagation(); runWatchlist(w); }}><Icon name="mail" className="w-3.5 h-3.5"/></button>
+                            <button className="p-1.5 hover:text-evo-cyan" onClick={(ev) => { ev.stopPropagation(); runWatchlist(w); }}><Icon name="list" className="w-3.5 h-3.5"/></button>
+                            <button className="p-1.5 hover:text-evo-orange" onClick={(ev) => { ev.stopPropagation(); runWatchlist(w); }}><Icon name="sparkle" className="w-3.5 h-3.5"/></button>
                           </div>
                         </div>
                       ))}
@@ -3017,6 +3553,12 @@
                     </div>
                   </div>
                 </>
+              )}
+              {view === 'full' && (
+                <EvoFullSearchView events={events} meta={meta} onBack={() => setView('home')} onRunQuery={(q) => setQuery(q)} />
+              )}
+              {view === 'proximity' && (
+                <EvoProximityView events={events} onSelect={(e) => { onSelect(e); onClose(); }} onBack={() => setView('home')} />
               )}
               {view === 'results' && (
                 <div className="mt-4">
@@ -3620,12 +4162,12 @@
         // Intentionally de-emphasized: muted borders, subdued colors, lower
         // opacity. Hover restores full fidelity so the user can still inspect.
         return (
-          <div className="panel opacity-60 hover:opacity-100 transition-opacity duration-300"
-               style={{ borderColor: 'rgba(71,85,105,0.35)', background: 'rgba(15,23,42,0.35)' }}>
+          <div className="panel opacity-80 hover:opacity-100 transition-opacity duration-300"
+               style={{ borderColor: 'rgba(71,85,105,0.5)', background: 'rgba(15,23,42,0.5)' }}>
             <div className="panel-title">
               <span className="panel-title-tab"
-                    style={{ background: 'transparent', color: 'rgba(148,163,184,0.6)' }}>
-                <Icon name="scan" className="w-3 h-3 opacity-60"/>
+                    style={{ background: 'transparent', color: 'rgba(148,163,184,0.85)' }}>
+                <Icon name="scan" className="w-3 h-3 opacity-80"/>
                 stack &amp; affiliations
               </span>
             </div>
@@ -3633,20 +4175,20 @@
               {items.map((s, k) => (
                 <div
                   key={k}
-                  className="flex flex-col items-center justify-center gap-1 p-1.5 rounded-md border border-ink-700/30 bg-ink-950/20 hover:bg-ink-900/50 hover:border-ink-600/60 transition"
+                  className="flex flex-col items-center justify-center gap-1 p-1.5 rounded-md border border-ink-700/50 bg-ink-950/40 hover:bg-ink-900/60 hover:border-ink-600/70 transition"
                   title={s.label}
                 >
                   <span
                     className="w-7 h-7 rounded-md flex items-center justify-center"
                     style={{
-                      color: color + 'aa',
-                      background: color + '0a',
-                      border: '1px solid ' + color + '22',
+                      color: color + 'cc',
+                      background: color + '14',
+                      border: '1px solid ' + color + '33',
                     }}
                   >
                     <Icon name={s.icon} className="w-4 h-4"/>
                   </span>
-                  <span className="text-[9px] font-mono text-slate-500 text-center leading-tight tracking-wide">{s.label}</span>
+                  <span className="text-[10px] font-mono text-slate-400 text-center leading-tight tracking-wide">{s.label}</span>
                 </div>
               ))}
             </div>
@@ -3657,16 +4199,16 @@
       return (
         <section id="experience" className="max-w-7xl mx-auto px-6 py-14">
           <div className="mb-10 max-w-3xl">
-            <div className="text-[11px] font-mono text-slate-500 uppercase tracking-widest mb-2">Platform Evolution</div>
-            <h2 className="font-display font-bold text-3xl md:text-4xl text-slate-100 leading-tight">Platform Evolution &amp; Experience</h2>
-            <p className="text-slate-400 text-base mt-3 leading-relaxed">
+            <div className="silver-eyebrow text-[11px] font-mono uppercase mb-2">Platform Evolution</div>
+            <h2 className="silver-title font-display font-bold text-3xl md:text-4xl leading-tight">Platform Evolution &amp; Experience</h2>
+            <p className="text-slate-300 text-base mt-3 leading-relaxed">
               Latest to earliest. The systems and capabilities I&rsquo;ve built across 20+ years
               of mission-critical engineering, told as a system-evolution narrative rather than a r&eacute;sum&eacute;.
             </p>
           </div>
 
           <div className="relative">
-            <div className="absolute left-4 md:left-1/2 top-2 bottom-2 w-px bg-white/[0.08] md:-translate-x-1/2 pointer-events-none" />
+            <div className="timeline-rail absolute left-4 md:left-1/2 top-2 bottom-2 w-px md:-translate-x-1/2 pointer-events-none" />
 
             <div className="space-y-8 md:space-y-14">
               {items.map((it, idx) => {
@@ -3748,10 +4290,6 @@
               })}
             </div>
 
-            <div className="relative pl-12 md:pl-0 mt-4">
-              <div className="absolute left-4 md:left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-slate-600" />
-              <div className="md:text-center text-[10px] font-mono text-slate-500 uppercase tracking-widest">// origin // 2004</div>
-            </div>
           </div>
         </section>
       );
@@ -3855,7 +4393,7 @@
         <section id="skills" className="max-w-7xl mx-auto px-6 py-16 border-t border-white/[0.05]">
           <div className="mb-10 max-w-3xl">
             <div className="text-[11px] font-mono text-slate-500 uppercase tracking-widest mb-2">Skills</div>
-            <h2 className="font-display font-bold text-3xl md:text-4xl text-slate-100 leading-tight">Systems &amp; Technologies I Build With</h2>
+            <h2 className="font-display font-bold text-3xl md:text-4xl text-slate-100 leading-tight">Systems &amp; Technologies <span className="text-slate-400 font-normal italic">I</span> Build With</h2>
             <p className="mt-3 text-slate-400 text-sm md:text-base leading-relaxed">
               Technologies and patterns used to design and operate real-time, distributed systems.
             </p>
