@@ -607,19 +607,30 @@
        the previous styles and the prior scrollY. Using a counter lets stacked
        popups (A opens B) keep the lock continuously rather than flickering. */
     let scrollLockCount = 0;
-    let savedScroll = { y: 0, overflow: '', paddingRight: '' };
+    let savedScroll = { y: 0, bodyOverflow: '', paddingRight: '', bodyPosition: '', bodyTop: '', bodyWidth: '', htmlOverflow: '' };
     function acquireScrollLock() {
       if (typeof document === 'undefined') return;
       if (scrollLockCount === 0) {
         const body = document.body;
         const html = document.documentElement;
         savedScroll.y = window.scrollY || window.pageYOffset || 0;
-        savedScroll.overflow = body.style.overflow;
+        savedScroll.bodyOverflow = body.style.overflow;
         savedScroll.paddingRight = body.style.paddingRight;
+        savedScroll.bodyPosition = body.style.position;
+        savedScroll.bodyTop = body.style.top;
+        savedScroll.bodyWidth = body.style.width;
+        savedScroll.htmlOverflow = html.style.overflow;
         // Preserve space for the removed scrollbar so the layout doesn't shift.
         const sbw = window.innerWidth - html.clientWidth;
         if (sbw > 0) body.style.paddingRight = sbw + 'px';
+        // Pin the body in place via position:fixed so neither <html> nor <body>
+        // can scroll underneath the popup. This is the most reliable lock that
+        // also works on iOS Safari.
+        body.style.position = 'fixed';
+        body.style.top = '-' + savedScroll.y + 'px';
+        body.style.width = '100%';
         body.style.overflow = 'hidden';
+        html.style.overflow = 'hidden';
       }
       scrollLockCount += 1;
     }
@@ -628,8 +639,15 @@
       scrollLockCount = Math.max(0, scrollLockCount - 1);
       if (scrollLockCount === 0) {
         const body = document.body;
-        body.style.overflow = savedScroll.overflow || '';
+        const html = document.documentElement;
+        body.style.overflow = savedScroll.bodyOverflow || '';
         body.style.paddingRight = savedScroll.paddingRight || '';
+        body.style.position = savedScroll.bodyPosition || '';
+        body.style.top = savedScroll.bodyTop || '';
+        body.style.width = savedScroll.bodyWidth || '';
+        html.style.overflow = savedScroll.htmlOverflow || '';
+        // Restore the prior scroll position now that the body is unpinned.
+        try { window.scrollTo(0, savedScroll.y || 0); } catch (_) {}
       }
     }
 
@@ -721,7 +739,7 @@
       flame: <path d="M12 3c0 3 4 4 4 8a4 4 0 0 1-8 0c0-2 2-3 2-5M12 15a2 2 0 1 1 0 4 2 2 0 0 1 0-4z" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinejoin="round"/>,
       'home-alert': <path d="M4 11l8-7 8 7v9H4zM12 10v4M12 17v.5" stroke="currentColor" strokeWidth="1.8" fill="none" strokeLinecap="round" strokeLinejoin="round"/>,
       pill: <path d="M7 17l10-10a4 4 0 1 1 5 5L12 22a4 4 0 1 1-5-5zM10 14l4-4" stroke="currentColor" strokeWidth="1.7" fill="none" strokeLinejoin="round"/>,
-      search: <path d="M10 4a6 6 0 1 1-4.2 10.2L3 17M10 4a6 6 0 0 1 6 6" stroke="currentColor" strokeWidth="1.8" fill="none" strokeLinecap="round"/>,
+      search: <g><circle cx="11" cy="11" r="6" stroke="currentColor" strokeWidth="2" fill="none"/><path d="M15.5 15.5L20 20" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"/></g>,
       cross: <path d="M9 3h6v6h6v6h-6v6H9v-6H3V9h6z" stroke="currentColor" strokeWidth="1.6" fill="none" strokeLinejoin="round"/>,
       box: <path d="M4 7l8-4 8 4v10l-8 4-8-4zM4 7l8 4 8-4M12 11v10" stroke="currentColor" strokeWidth="1.6" fill="none" strokeLinejoin="round"/>,
       info: <path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM12 11v5M12 7.5v.5" stroke="currentColor" strokeWidth="1.8" fill="none" strokeLinecap="round"/>,
@@ -741,7 +759,7 @@
       plus: <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>,
       map: <path d="M9 3l-6 3v15l6-3 6 3 6-3V3l-6 3-6-3zM9 3v15M15 6v15" stroke="currentColor" strokeWidth="1.6" fill="none" strokeLinejoin="round"/>,
       clock: <path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM12 7v6l4 2" stroke="currentColor" strokeWidth="1.8" fill="none" strokeLinecap="round"/>,
-      compass: <g><circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.7" fill="none"/><path d="M16 8l-3 7-5 1 3-7z" fill="currentColor"/></g>,
+      compass: <g><circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.7" fill="none"/><path d="M12 6l2 6-2 6-2-6z" fill="currentColor" opacity="0.9"/><path d="M6 12l6-2 6 2-6 2z" fill="currentColor" opacity="0.35"/><circle cx="12" cy="12" r="1" fill="currentColor"/></g>,
       linkedin: <path d="M6 9v12H3V9zM4.5 3a2 2 0 1 1 0 4 2 2 0 0 1 0-4zM10 9h3v2c.6-1 2-2 4-2 3 0 5 2 5 5v7h-3v-6c0-2-1-3-2.5-3S14 13 14 15v6h-3z" fill="currentColor"/>,
       sparkle: <path d="M12 3l2 6 6 2-6 2-2 6-2-6-6-2 6-2zM19 14l1 2 2 1-2 1-1 2-1-2-2-1 2-1z" stroke="currentColor" strokeWidth="1.4" fill="none" strokeLinejoin="round"/>,
       book: <path d="M6 3h12a2 2 0 0 1 2 2v14a1 1 0 0 1-1 1H8a3 3 0 0 1-3-3V5a2 2 0 0 1 1-2z" stroke="currentColor" strokeWidth="1.7" fill="none" strokeLinejoin="round"/>,
@@ -749,6 +767,7 @@
       reload: <path d="M3 12a9 9 0 0 1 15.6-6.2L21 8M21 3v5h-5M21 12a9 9 0 0 1-15.6 6.2L3 16M3 21v-5h5" stroke="currentColor" strokeWidth="1.8" fill="none" strokeLinecap="round" strokeLinejoin="round"/>,
       filter: <path d="M4 5h16l-6 8v6l-4 2v-8z" stroke="currentColor" strokeWidth="1.7" fill="none" strokeLinejoin="round"/>,
       pin: <path d="M12 3a6 6 0 0 0-6 6c0 5 6 12 6 12s6-7 6-12a6 6 0 0 0-6-6zM12 7a2 2 0 1 1 0 4 2 2 0 0 1 0-4z" stroke="currentColor" strokeWidth="1.6" fill="none" strokeLinejoin="round"/>,
+      radar: <g><circle cx="12" cy="12" r="8.5" stroke="currentColor" strokeWidth="1.3" fill="none" opacity="0.35"/><circle cx="12" cy="12" r="5.5" stroke="currentColor" strokeWidth="1.6" fill="none" opacity="0.65"/><circle cx="12" cy="12" r="2.5" stroke="currentColor" strokeWidth="1.8" fill="none"/><circle cx="12" cy="12" r="1" fill="currentColor"/><path d="M12 1.5v2.5M12 20v2.5M1.5 12h2.5M20 12h2.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" opacity="0.6"/></g>,
       arrow: <path d="M5 12h14M13 5l7 7-7 7" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"/>,
       cpu: <path d="M6 6h12v12H6zM2 9h4M2 15h4M18 9h4M18 15h4M9 2v4M15 2v4M9 18v4M15 18v4M9 9h6v6H9z" stroke="currentColor" strokeWidth="1.6" fill="none"/>,
       db: <path d="M4 6c0-2 4-3 8-3s8 1 8 3-4 3-8 3-8-1-8-3zM4 6v12c0 2 4 3 8 3s8-1 8-3V6M4 12c0 2 4 3 8 3s8-1 8-3" stroke="currentColor" strokeWidth="1.6" fill="none"/>,
@@ -1747,7 +1766,7 @@
               <p className="text-slate-400 text-base md:text-lg leading-relaxed">
                 This is a live representation of a real-time operational platform I architected and built end-to-end,
                 demonstrating event ingestion, geographic coordination, and analytics across multiple agencies,
-                using representative CAD data in a non-production environment.
+                using representative data in a non-production environment.
               </p>
             </div>
             <button
@@ -2454,10 +2473,19 @@
     /* ============ TRENDS BLOCK: Event Totals + Heatmap with shared filter ============ */
     function TrendsBlock({ meta, events }) {
       const [filter, setFilter] = React.useState(null); // { cat, sev? } or null
+      const heatmapRef = React.useRef(null);
+      const handleSelect = React.useCallback((next) => {
+        setFilter(next);
+        if (heatmapRef.current) {
+          try { heatmapRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (_) {}
+        }
+      }, []);
       return (
         <div className="space-y-4">
-          <EventTotals meta={meta} events={events} activeFilter={filter} onSelect={setFilter} />
-          <EventHeatmap events={events} filter={filter} onClear={() => setFilter(null)} />
+          <EventTotals meta={meta} events={events} activeFilter={filter} onSelect={handleSelect} />
+          <div ref={heatmapRef} className="scroll-mt-20">
+            <EventHeatmap events={events} filter={filter} onClear={() => setFilter(null)} />
+          </div>
         </div>
       );
     }
@@ -3419,6 +3447,52 @@
         }
       };
 
+      // Build a keyword context snippet for a result row, showing where the
+      // query tokens match within the event's text. Prefers narratives when
+      // enriched data is available, then falls back to structured fields.
+      const buildSnippet = (e) => {
+        const q = query.toLowerCase().trim();
+        if (!q) return null;
+        const tokens = q.split(/\s+/).filter(Boolean);
+        if (!tokens.length) return null;
+        const sources = [];
+        if (searchNarratives && enriched && enriched.get) {
+          const fl = enriched.get(e.id);
+          if (fl) {
+            if (fl.cfs) for (const c of fl.cfs) if (c.narrative) sources.push({ label: 'NARRATIVE', text: c.narrative });
+            if (fl.incidents) for (const i of fl.incidents) if (i.narrative) sources.push({ label: 'INCIDENT', text: i.narrative });
+            if (fl.bolos) for (const b of fl.bolos) if (b.narrative) sources.push({ label: 'BOLO', text: b.narrative });
+          }
+        }
+        if (e.label) sources.push({ label: 'LABEL', text: e.label });
+        if (e.cat) sources.push({ label: 'CATEGORY', text: e.cat });
+        const loc = [e.addr, e.city, e.dist, e.beat].filter(Boolean).join(' ');
+        if (loc) sources.push({ label: 'LOCATION', text: loc });
+        if (e.agency) sources.push({ label: 'AGENCY', text: e.agency });
+        for (const src of sources) {
+          const lower = src.text.toLowerCase();
+          let bestIdx = -1;
+          for (const t of tokens) {
+            const i = lower.indexOf(t);
+            if (i !== -1 && (bestIdx === -1 || i < bestIdx)) bestIdx = i;
+          }
+          if (bestIdx === -1) continue;
+          const start = Math.max(0, bestIdx - 30);
+          const end = Math.min(src.text.length, bestIdx + 100);
+          const seg = src.text.slice(start, end);
+          const escaped = tokens.map(t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).filter(Boolean);
+          if (!escaped.length) {
+            return { source: src.label, prefix: start > 0 ? '\u2026' : '', suffix: end < src.text.length ? '\u2026' : '', parts: [{ match: false, text: seg }] };
+          }
+          const re = new RegExp('(' + escaped.join('|') + ')', 'gi');
+          const pieces = seg.split(re);
+          const parts = pieces.map((p, idx) => ({ match: idx % 2 === 1, text: p }));
+          return { source: src.label, prefix: start > 0 ? '\u2026' : '', suffix: end < src.text.length ? '\u2026' : '', parts };
+        }
+        return null;
+      };
+
+
       return (
         <div className="fixed inset-0 z-[9999] modal-backdrop flex items-start justify-center p-4 md:p-12 overflow-y-auto" onClick={onClose}>
           <div className="panel w-full max-w-3xl" onClick={e => e.stopPropagation()}>
@@ -3436,7 +3510,7 @@
                 </div>
                 <div className="min-w-0">
                   <div className="font-display font-bold text-[17px] leading-none text-slate-100 tracking-tight">Evo AI</div>
-                  <div className="mt-1 text-[10px] font-mono uppercase tracking-[0.18em] text-slate-400">Search <span className="text-slate-600">&middot;</span> Analytics <span className="text-slate-600">&middot;</span> Proximity</div>
+                  <div className="mt-1 text-[10px] font-mono uppercase tracking-[0.18em] text-slate-400">Search <span className="text-slate-600">&middot;</span> Analytics</div>
                 </div>
               </div>
               <div className="relative flex items-center gap-2">
@@ -3494,18 +3568,44 @@
               {view === 'home' && (
                 <>
                   <div className="grid grid-cols-2 gap-3 mt-4">
-                    <button type="button" onClick={() => setView('full')} className="evo-btn !p-3 !items-start text-left flex gap-2.5 min-w-0 hover:border-evo-orange/40">
-                      <span className="cat-icon shrink-0" style={{background:'#ff7b29'}}><Icon name="search"/></span>
-                      <span className="flex flex-col min-w-0 leading-tight">
-                        <span className="text-sm font-semibold text-slate-100 whitespace-nowrap">Full Search <span className="text-slate-500">&rsaquo;</span></span>
-                        <span className="text-[11px] text-slate-400 mt-0.5 whitespace-nowrap">Additional dimensions</span>
+                    <button
+                      type="button"
+                      onClick={() => setView('full')}
+                      className="evo-action group relative overflow-hidden rounded-xl p-3.5 flex items-center gap-3 border border-evo-orange/30 hover:border-evo-orange/70 transition-all duration-200 hover:-translate-y-0.5 shadow-[0_3px_12px_rgba(255,123,41,0.12)] hover:shadow-[0_6px_24px_rgba(255,123,41,0.32)]"
+                      style={{background: 'linear-gradient(135deg, rgba(255,123,41,0.20) 0%, rgba(245,158,11,0.08) 55%, rgba(15,20,28,0.55) 100%)'}}
+                    >
+                      <span aria-hidden="true" className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300" style={{background: 'radial-gradient(ellipse 70% 90% at 20% 20%, rgba(255,123,41,0.28), transparent 70%)'}}></span>
+                      <span aria-hidden="true" className="absolute -left-12 top-0 w-12 h-full bg-white/10 skew-x-12 transition-transform duration-700 ease-out group-hover:translate-x-[320px]"></span>
+                      <span className="relative w-10 h-10 rounded-lg flex items-center justify-center shrink-0 border border-evo-orange/50 shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_2px_8px_rgba(255,123,41,0.35)]" style={{background: 'linear-gradient(135deg, #FF7B29 0%, #C04E0F 100%)'}}>
+                        <Icon name="search" className="w-4 h-4 text-white"/>
+                      </span>
+                      <span className="relative flex flex-col min-w-0 leading-tight text-left">
+                        <span className="text-[9px] font-mono uppercase tracking-[0.18em] text-evo-orange/80">Action</span>
+                        <span className="text-sm font-bold text-slate-100 whitespace-nowrap tracking-tight">Full Search</span>
+                        <span className="text-[10px] text-slate-400 mt-0.5 whitespace-nowrap">Additional dimensions</span>
+                      </span>
+                      <span className="relative ml-auto text-evo-orange/70 group-hover:text-evo-orange transition-all group-hover:translate-x-0.5">
+                        <Icon name="arrow" className="w-4 h-4"/>
                       </span>
                     </button>
-                    <button type="button" onClick={() => setView('proximity')} className="evo-btn !p-3 !items-start text-left flex gap-2.5 min-w-0 hover:border-evo-cyan/40">
-                      <span className="cat-icon shrink-0" style={{background:'#06b6d4'}}><Icon name="compass"/></span>
-                      <span className="flex flex-col min-w-0 leading-tight">
-                        <span className="text-sm font-semibold text-slate-100 whitespace-nowrap">Proximity <span className="text-slate-500">&rsaquo;</span></span>
-                        <span className="text-[11px] text-slate-400 mt-0.5 whitespace-nowrap">Radius / shape</span>
+                    <button
+                      type="button"
+                      onClick={() => setView('proximity')}
+                      className="evo-action group relative overflow-hidden rounded-xl p-3.5 flex items-center gap-3 border border-evo-cyan/30 hover:border-evo-cyan/70 transition-all duration-200 hover:-translate-y-0.5 shadow-[0_3px_12px_rgba(6,182,212,0.12)] hover:shadow-[0_6px_24px_rgba(6,182,212,0.32)]"
+                      style={{background: 'linear-gradient(135deg, rgba(6,182,212,0.20) 0%, rgba(56,189,248,0.08) 55%, rgba(15,20,28,0.55) 100%)'}}
+                    >
+                      <span aria-hidden="true" className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300" style={{background: 'radial-gradient(ellipse 70% 90% at 20% 20%, rgba(6,182,212,0.28), transparent 70%)'}}></span>
+                      <span aria-hidden="true" className="absolute -left-12 top-0 w-12 h-full bg-white/10 skew-x-12 transition-transform duration-700 ease-out group-hover:translate-x-[320px]"></span>
+                      <span className="relative w-10 h-10 rounded-lg flex items-center justify-center shrink-0 border border-evo-cyan/50 shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_2px_8px_rgba(6,182,212,0.35)]" style={{background: 'linear-gradient(135deg, #22D3EE 0%, #0369A1 100%)'}}>
+                        <Icon name="radar" className="w-4 h-4 text-white"/>
+                      </span>
+                      <span className="relative flex flex-col min-w-0 leading-tight text-left">
+                        <span className="text-[9px] font-mono uppercase tracking-[0.18em] text-evo-cyan/80">Action</span>
+                        <span className="text-sm font-bold text-slate-100 whitespace-nowrap tracking-tight">Proximity</span>
+                        <span className="text-[10px] text-slate-400 mt-0.5 whitespace-nowrap">Radius / shape</span>
+                      </span>
+                      <span className="relative ml-auto text-evo-cyan/70 group-hover:text-evo-cyan transition-all group-hover:translate-x-0.5">
+                        <Icon name="arrow" className="w-4 h-4"/>
                       </span>
                     </button>
                   </div>
@@ -3566,22 +3666,37 @@
                     ◉ {results.length} matches across {(meta.totalKept || meta.totalSampled || events.length).toLocaleString()} indexed events
                   </div>
                   <div className="space-y-1 max-h-[420px] overflow-y-auto pr-2">
-                    {results.map(e => (
-                      <div key={e.id} className="event-row" onClick={() => { onSelect(e); onClose(); }}>
+                    {results.map(e => {
+                      const snip = buildSnippet(e);
+                      return (
+                      <div key={e.id} className="event-row evo-result-row items-start" onClick={() => { onSelect(e); onClose(); }}>
                         <CatIcon cat={e.cat} size="lg"/>
-                        <div className="min-w-0">
+                        <div className="min-w-0 flex-1">
                           <div className="text-[11px] font-mono text-slate-400">{e.ccn}</div>
                           <div className="text-[13px] font-semibold text-slate-100 truncate">
                             <span className="text-slate-400 font-mono">({e.code})</span> {e.label}
                           </div>
                           <div className="text-[10px] text-slate-500 truncate">{e.addr ? e.addr + ', ' + e.city : e.city + ', ' + e.state}</div>
+                          {snip && (
+                            <div className="mt-1.5 text-[10.5px] leading-snug text-slate-400 bg-ink-900/50 border border-ink-700/50 rounded px-2 py-1 font-mono" style={{whiteSpace:'normal', overflowWrap:'anywhere'}}>
+                              <span className="text-evo-cyan/70 mr-1">{snip.source}</span>
+                              {snip.prefix}
+                              {snip.parts.map((p, i) => p.match ? (
+                                <mark key={i} className="bg-evo-amber/30 text-amber-100 rounded px-0.5 mx-[0.5px]">{p.text}</mark>
+                              ) : (
+                                <span key={i}>{p.text}</span>
+                              ))}
+                              {snip.suffix}
+                            </div>
+                          )}
                         </div>
-                        <div className="text-right">
+                        <div className="text-right shrink-0">
                           <div className="text-[11px] font-mono text-slate-300">{dateShortFmt(e.dt)}</div>
                           {e.dist && <div className="mt-1"><span className="chip-dist">{e.dist}</span></div>}
                         </div>
                       </div>
-                    ))}
+                      );
+                    })}
                     {results.length === 0 && <div className="text-center text-slate-500 text-sm py-6">No matches.</div>}
                   </div>
                 </div>
@@ -3603,18 +3718,42 @@
       return (
         <div className="fixed inset-0 z-[9999] modal-backdrop flex items-center justify-center p-4" onClick={onClose}>
           <div className="panel w-full max-w-5xl max-h-[92vh] flex flex-col" onClick={ev => ev.stopPropagation()}>
-            <div className="panel-title shrink-0">
-              <span className="panel-title-tab">
-                <Icon name="info" className="w-3.5 h-3.5"/>
-                EVENT DETAIL · {e.ccn || e.oid || '–'}
-              </span>
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-mono text-slate-500">ESC to close</span>
+            <div className="event-detail-header relative overflow-hidden px-5 py-3.5 flex items-center justify-between border-b border-ink-700/70 rounded-t-xl shrink-0" style={{background: 'linear-gradient(180deg, ' + (c.color + '1F') + ' 0%, ' + (c.color + '0A') + ' 45%, rgba(15,20,28,0.0) 100%), linear-gradient(180deg, #12161D 0%, #0D1117 100%)'}}>
+              {/* top accent line tinted by category color */}
+              <div aria-hidden="true" className="absolute inset-x-0 top-0 h-[2px]" style={{background: 'linear-gradient(90deg, transparent 0%, ' + c.color + ' 18%, ' + c.color + ' 82%, transparent 100%)', opacity: 0.85}}></div>
+              {/* subtle inner highlight */}
+              <div aria-hidden="true" className="absolute inset-x-0 top-[2px] h-[1px] bg-white/[0.04]"></div>
+              {/* faint radial glow behind category icon */}
+              <div aria-hidden="true" className="absolute left-0 top-0 w-60 h-full pointer-events-none" style={{background: 'radial-gradient(ellipse 40% 80% at 15% 50%, ' + c.color + '26, transparent 70%)'}}></div>
+
+              <div className="relative flex items-center gap-3 min-w-0">
+                <div className="w-11 h-11 rounded-lg flex items-center justify-center shadow-[0_2px_10px_rgba(0,0,0,0.35)] shrink-0" style={{background: 'linear-gradient(135deg, ' + c.color + '66 0%, ' + c.color + '33 100%)', border: '1px solid ' + c.color + '80'}}>
+                  <Icon name={c.icon || 'info'} className="w-5 h-5" style={{color: c.color}}/>
+                </div>
+                <div className="min-w-0">
+                  <div className="font-display font-bold text-[17px] leading-none text-slate-100 tracking-tight">Event Detail</div>
+                  <div className="mt-1 text-[10px] font-mono uppercase tracking-[0.18em] text-slate-400 truncate">
+                    <span className="text-evo-cyan/90">{e.ccn || e.oid || '\u2013'}</span>
+                    <span className="text-slate-600 mx-1.5">&middot;</span>
+                    <span style={{color: c.color}}>{c.label}</span>
+                    {e.code && (<><span className="text-slate-600 mx-1.5">&middot;</span><span>Code {e.code}</span></>)}
+                  </div>
+                </div>
+              </div>
+
+              <div className="relative flex items-center gap-2 shrink-0">
+                {e.sev != null && (
+                  <span className="hidden sm:inline-flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-widest rounded-full px-2 py-0.5 border" style={{color: sevColors[e.sev] || sevColors[0], borderColor: (sevColors[e.sev] || sevColors[0]) + '40', background: (sevColors[e.sev] || sevColors[0]) + '1A'}}>
+                    <span className="w-1.5 h-1.5 rounded-full" style={{background: sevColors[e.sev] || sevColors[0]}}></span>
+                    Sev {e.sev}
+                  </span>
+                )}
+                <span className="hidden md:inline-flex text-[10px] font-mono text-slate-500 tracking-widest uppercase px-2 py-0.5">ESC</span>
                 <button
                   onClick={onClose}
-                  className="w-8 h-8 flex items-center justify-center rounded-md text-slate-300 hover:text-white hover:bg-rose-600/30 border border-ink-600/60 hover:border-rose-500/60 transition-colors"
-                  title="Close (ESC)"
                   aria-label="Close"
+                  title="Close (ESC)"
+                  className="w-8 h-8 rounded-md border border-ink-700/70 bg-ink-900/60 text-slate-400 hover:text-white hover:border-rose-500/50 hover:bg-rose-600/20 transition-colors flex items-center justify-center"
                 >
                   <Icon name="x" className="w-4 h-4"/>
                 </button>
@@ -4527,7 +4666,7 @@
       );
     }
 
-    /* ============ FOOTER ============ */
+    /* ============ RETURN TO TOP ============ */
     function ReturnToTop() {
       const scrollTop = () => {
         if (typeof window !== 'undefined') {
@@ -4558,6 +4697,7 @@
       );
     }
 
+    /* ============ FOOTER ============ */
     function Footer() {
       return (
         <footer className="max-w-7xl mx-auto px-6 py-10 border-t border-white/[0.05] mt-8">
