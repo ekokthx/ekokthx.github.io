@@ -94,26 +94,44 @@
   }
 
   /* ============ SECTION BACKGROUND BANDS ============
-     Subtle full-width tints applied directly to each major <section id="…">
-     using the box-shadow + clip-path trick: the shadow extends horizontally
-     to 100vmax but is clipped vertically to the section's own height, so it
-     reads as a flat band that spans the viewport without affecting the
-     constrained (max-w-7xl) content inside. The tints cycle through a
-     3-tone palette (cool cyan → neutral lift → warm amber) to give each
-     section a distinct but quiet identity while staying on-theme. */
+     Subtle full-width tints applied to each major <section id="…"> via a
+     ::before pseudo-element. The pseudo spans 100vw (edge-to-edge) but is
+     bounded vertically by the section, so the tints read as clean bands
+     without clipping descendants. Critically, this approach avoids both
+     `clip-path` (which clips fixed-positioned tooltips) and `isolation`
+     (which would trap fixed modals in the section's stacking context).
+     Direct children are promoted to `position: relative` so they paint
+     above the ::before per normal CSS painting order. Fixed-position
+     tooltips/modals (z-[9999]) escape to the viewport as usual and paint
+     above everything. Palette cycles cool cyan → neutral → warm amber. */
   section[id] {
-    clip-path: inset(0 -100vmax);
+    position: relative;
   }
-  section#platform      { box-shadow: 0 0 0 100vmax rgba( 56,189,248,0.030); }
-  section#demo          { box-shadow: 0 0 0 100vmax rgba(255,255,255,0.020); }
-  section#architecture  { box-shadow: 0 0 0 100vmax rgba(245,158, 11,0.026); }
-  section#impact        { box-shadow: 0 0 0 100vmax rgba( 56,189,248,0.030); }
-  section#workflow      { box-shadow: 0 0 0 100vmax rgba(255,255,255,0.020); }
-  section#experience    { box-shadow: 0 0 0 100vmax rgba(245,158, 11,0.026); }
-  section#skills        { box-shadow: 0 0 0 100vmax rgba( 56,189,248,0.030); }
-  section#stack         { box-shadow: 0 0 0 100vmax rgba(255,255,255,0.020); }
-  section#capabilities  { box-shadow: 0 0 0 100vmax rgba(245,158, 11,0.026); }
-  section#contact       { box-shadow: 0 0 0 100vmax rgba( 56,189,248,0.040); }
+  section[id]::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: calc(50% - 50vw);
+    width: 100vw;
+    pointer-events: none;
+  }
+  /* :where() gives this rule zero specificity so Tailwind's .fixed/.absolute/.sticky
+     classes on descendants (modals, popups, sticky headers) still win and keep
+     their intended positioning. Only children that have NO explicit position
+     utility get bumped to relative so they paint above the ::before tint. */
+  :where(section[id] > *) { position: relative; }
+
+  section#platform::before      { background: rgba( 56,189,248,0.030); }
+  section#demo::before          { background: rgba(255,255,255,0.020); }
+  section#architecture::before  { background: rgba(245,158, 11,0.026); }
+  section#impact::before        { background: rgba( 56,189,248,0.030); }
+  section#workflow::before      { background: rgba(255,255,255,0.020); }
+  section#experience::before    { background: rgba(245,158, 11,0.026); }
+  section#skills::before        { background: rgba( 56,189,248,0.030); }
+  section#stack::before         { background: rgba(255,255,255,0.020); }
+  section#capabilities::before  { background: rgba(245,158, 11,0.026); }
+  section#contact::before       { background: rgba( 56,189,248,0.040); }
 
   /* ============ PANELS ============ */
   .panel {
@@ -1514,7 +1532,7 @@
           <div className="flex items-end justify-between mb-8 gap-4 flex-wrap border-t border-white/[0.05] pt-12">
             <div className="max-w-3xl">
               <div className="text-[11px] font-mono text-slate-500 uppercase tracking-widest mb-2">Live System Demo</div>
-              <h2 className="font-display text-3xl md:text-4xl font-bold text-slate-100 mb-3 leading-tight">A working slice of the platform.</h2>
+              <h2 className="font-display text-3xl md:text-4xl font-bold text-slate-100 mb-3 leading-tight">A working slice of a real-time platform.</h2>
               <p className="text-slate-400 text-base md:text-lg leading-relaxed">
                 This is a live representation of a real-time operational platform I architected and built end-to-end,
                 demonstrating event ingestion, geographic coordination, and analytics across multiple agencies,
