@@ -640,6 +640,12 @@
       if (scrollLockCount === 0) {
         const body = document.body;
         const html = document.documentElement;
+        // Suppress smooth-scroll animation during restore so the page doesn't
+        // appear to slide back to the previous position.
+        const prevHtmlScrollBehavior = html.style.scrollBehavior;
+        const prevBodyScrollBehavior = body.style.scrollBehavior;
+        html.style.scrollBehavior = 'auto';
+        body.style.scrollBehavior = 'auto';
         body.style.overflow = savedScroll.bodyOverflow || '';
         body.style.paddingRight = savedScroll.paddingRight || '';
         body.style.position = savedScroll.bodyPosition || '';
@@ -647,7 +653,21 @@
         body.style.width = savedScroll.bodyWidth || '';
         html.style.overflow = savedScroll.htmlOverflow || '';
         // Restore the prior scroll position now that the body is unpinned.
-        try { window.scrollTo(0, savedScroll.y || 0); } catch (_) {}
+        try {
+          if (window.scrollTo.length > 0) {
+            window.scrollTo({ top: savedScroll.y || 0, left: 0, behavior: 'instant' });
+          } else {
+            window.scrollTo(0, savedScroll.y || 0);
+          }
+        } catch (_) {
+          try { window.scrollTo(0, savedScroll.y || 0); } catch (__) {}
+        }
+        // Restore scroll-behavior on the next frame so user-initiated smooth
+        // scrolls (e.g. anchor links) keep working.
+        requestAnimationFrame(() => {
+          html.style.scrollBehavior = prevHtmlScrollBehavior || '';
+          body.style.scrollBehavior = prevBodyScrollBehavior || '';
+        });
       }
     }
 
@@ -1516,6 +1536,7 @@
           <CoreStack />
           <Capabilities />
           <Contact />
+          <Testimonials />
           <ReturnToTop />
           <Footer />
         </div>
@@ -4342,7 +4363,7 @@
             <h2 className="silver-title font-display font-bold text-3xl md:text-4xl leading-tight">Platform Evolution &amp; Experience</h2>
             <p className="text-slate-300 text-base mt-3 leading-relaxed">
               Latest to earliest. The systems and capabilities I&rsquo;ve built across 20+ years
-              of mission-critical engineering, told as a system-evolution narrative rather than a r&eacute;sum&eacute;.
+              of mission-critical engineering, told as a system-evolution narrative rather than a resume.
             </p>
           </div>
 
@@ -4607,7 +4628,7 @@
         {
           icon: 'sparkle',
           title: 'AI & Data Systems',
-          chips: ['AI Engineering', 'RAG systems', 'Natural language querying', 'Azure OpenAI'],
+          chips: ['AI Engineering', 'MCP Orchestration', 'RAG systems', 'Natural language querying', 'Azure OpenAI'],
         },
       ];
       return (
@@ -4661,6 +4682,63 @@
               <a href="mailto:echokinetics@gmail.com" className="evo-btn primary"><Icon name="mail" className="w-4 h-4"/>echokinetics@gmail.com</a>
               <a href="https://www.linkedin.com/in/mjones-w" target="_blank" rel="noreferrer" className="evo-btn"><Icon name="linkedin" className="w-4 h-4"/>LinkedIn</a>
             </div>
+          </div>
+        </section>
+      );
+    }
+
+        /* ============ TESTIMONIALS ============ */
+    const TESTIMONIALS = [
+      { quote: "We rely on the platform tremendously and routinely throughout the day to move personnel and change strategies.", author: "Samir P.", role: "Police Command" },
+      { quote: "After reviewing the updates, I am excited by the adjustments. This presents a much cleaner operating picture.", author: "Sean C.", role: "Police Captain" },
+      { quote: "I too appreciate the monumental task you have taken on for us, and the timeline of less than a month to accomplish it.", author: "Arlene B.", role: "Police Sergeant" },
+      { quote: "As usual we are continually impressed by your willingness to work with us and integrate our feedback.", author: "Stephen E.", role: "Systems Administrator" },
+      { quote: "This is really great work. These changes result in quicker page loads and smoother, more seamless transitions. I love the direction that you are moving the system towards.", author: "Howard T.", role: "Training & Solutions Manager" },
+      { quote: "Thank you for the great customer service and quick response.", author: "Edward B.", role: "Police Captain" },
+      { quote: "Always a pleasure working with you.", author: "Karim A.", role: "IT Specialist / Software QA" },
+      { quote: "I wanted to take a moment to express my sincere appreciation for your contributions and expertise over the years.", author: "Randy H.", role: "IT Bureau, Police Department" },
+    ];
+
+    function Testimonials() {
+      const [expanded, setExpanded] = React.useState(false);
+      const initial = 5;
+      const visible = expanded ? TESTIMONIALS : TESTIMONIALS.slice(0, initial);
+      const remaining = TESTIMONIALS.length - initial;
+      return (
+        <section id="testimonials" className="max-w-5xl mx-auto px-6 pt-10 pb-16 opacity-80">
+          <div className="mb-6 text-center">
+            <div className="text-[10px] font-mono text-slate-600 uppercase tracking-[0.2em] mb-1.5">Field Notes</div>
+            <div className="mx-auto w-12 h-px bg-slate-700/60"></div>
+            <h3 className="mt-4 font-display text-base md:text-lg text-slate-400 font-normal italic tracking-tight">Selected recognition, over time</h3>
+          </div>
+          <div className="grid md:grid-cols-2 gap-3">
+            {visible.map((t, i) => (
+              <figure key={i} className="relative rounded-lg border border-ink-800/60 bg-ink-950/30 px-4 py-3 hover:bg-ink-900/40 hover:border-ink-700/70 transition-colors">
+                <div aria-hidden="true" className="absolute top-1 left-2 text-slate-700 font-serif text-2xl leading-none select-none">&ldquo;</div>
+                <blockquote className="pl-5 text-[12.5px] leading-relaxed text-slate-400 italic">
+                  {t.quote}
+                </blockquote>
+                <figcaption className="pl-5 mt-2 text-[10px] font-mono text-slate-500 uppercase tracking-wider">
+                  <span className="text-slate-400">{t.author}</span>
+                  <span className="text-slate-700 mx-1.5">&middot;</span>
+                  <span>{t.role}</span>
+                </figcaption>
+              </figure>
+            ))}
+          </div>
+          {remaining > 0 && (
+            <div className="mt-5 text-center">
+              <button
+                type="button"
+                onClick={() => setExpanded(v => !v)}
+                className="text-[11px] font-mono uppercase tracking-[0.2em] text-slate-500 hover:text-slate-300 transition-colors px-4 py-1.5 rounded border border-ink-800/60 hover:border-ink-700/70 bg-ink-950/20 hover:bg-ink-900/40"
+              >
+                {expanded ? '\u2212 show less' : '+ show ' + remaining + ' more'}
+              </button>
+            </div>
+          )}
+          <div className="mt-6 text-center text-[9px] font-mono text-slate-700 uppercase tracking-[0.22em]">
+            Sourced from internal email records &middot; anonymized
           </div>
         </section>
       );
