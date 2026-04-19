@@ -93,6 +93,28 @@
     background-size: 28px 28px;
   }
 
+  /* ============ SECTION BACKGROUND BANDS ============
+     Subtle full-width tints applied directly to each major <section id="…">
+     using the box-shadow + clip-path trick: the shadow extends horizontally
+     to 100vmax but is clipped vertically to the section's own height, so it
+     reads as a flat band that spans the viewport without affecting the
+     constrained (max-w-7xl) content inside. The tints cycle through a
+     3-tone palette (cool cyan → neutral lift → warm amber) to give each
+     section a distinct but quiet identity while staying on-theme. */
+  section[id] {
+    clip-path: inset(0 -100vmax);
+  }
+  section#platform      { box-shadow: 0 0 0 100vmax rgba( 56,189,248,0.030); }
+  section#demo          { box-shadow: 0 0 0 100vmax rgba(255,255,255,0.020); }
+  section#architecture  { box-shadow: 0 0 0 100vmax rgba(245,158, 11,0.026); }
+  section#impact        { box-shadow: 0 0 0 100vmax rgba( 56,189,248,0.030); }
+  section#workflow      { box-shadow: 0 0 0 100vmax rgba(255,255,255,0.020); }
+  section#experience    { box-shadow: 0 0 0 100vmax rgba(245,158, 11,0.026); }
+  section#skills        { box-shadow: 0 0 0 100vmax rgba( 56,189,248,0.030); }
+  section#stack         { box-shadow: 0 0 0 100vmax rgba(255,255,255,0.020); }
+  section#capabilities  { box-shadow: 0 0 0 100vmax rgba(245,158, 11,0.026); }
+  section#contact       { box-shadow: 0 0 0 100vmax rgba( 56,189,248,0.040); }
+
   /* ============ PANELS ============ */
   .panel {
     background: var(--bg-panel);
@@ -199,6 +221,108 @@
     display: flex; align-items: center; justify-content: center;
     border-radius: 50%;
   }
+  /* ============ COMMAND MAP TOOLTIPS ============ */
+  .leaflet-tooltip.command-tip-wrap {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    padding: 0;
+    border-radius: 0;
+    white-space: normal;
+    pointer-events: none;
+  }
+  .leaflet-tooltip.command-tip-wrap:before { display: none; }
+  .command-tip {
+    background: rgba(11, 15, 20, 0.96);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(56, 189, 248, 0.30);
+    border-radius: 10px;
+    padding: 10px 12px;
+    min-width: 220px;
+    max-width: 300px;
+    color: #E5ECF3;
+    box-shadow: 0 8px 28px rgba(0,0,0,0.55), 0 0 0 1px rgba(56,189,248,0.08);
+    font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+  }
+  .command-tip-head {
+    display: flex; align-items: center; gap: 8px;
+    padding-bottom: 8px; margin-bottom: 8px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+  .command-tip-dot {
+    width: 10px; height: 10px; border-radius: 999px;
+    box-shadow: 0 0 0 2px rgba(255,255,255,0.08);
+    flex-shrink: 0;
+  }
+  .command-tip-tag {
+    font-family: ui-monospace, monospace;
+    font-size: 9px;
+    letter-spacing: 0.14em;
+    color: #38BDF8;
+    padding: 2px 6px;
+    border: 1px solid rgba(56,189,248,0.35);
+    border-radius: 4px;
+    background: rgba(56,189,248,0.08);
+    text-transform: uppercase;
+  }
+  .command-tip-title {
+    font-weight: 600;
+    font-size: 13px;
+    line-height: 1.25;
+    color: #F1F5F9;
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .command-tip-row {
+    display: flex; align-items: baseline; gap: 10px;
+    padding: 2px 0;
+    font-size: 11.5px;
+  }
+  .command-tip-key {
+    font-family: ui-monospace, monospace;
+    font-size: 9.5px;
+    letter-spacing: 0.12em;
+    color: #64748B;
+    text-transform: uppercase;
+    flex: 0 0 62px;
+  }
+  .command-tip-val {
+    color: #CBD5E1;
+    flex: 1; min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  .command-tip-val.mono { font-family: ui-monospace, monospace; font-size: 11px; }
+  .command-tip-cat-row {
+    display: flex; align-items: center; gap: 8px;
+    padding: 3px 0;
+    font-size: 11px;
+  }
+  .command-tip-cat-dot {
+    width: 8px; height: 8px; border-radius: 999px; flex-shrink: 0;
+  }
+  .command-tip-cat-label { flex: 1; color: #E2E8F0; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .command-tip-cat-count { font-family: ui-monospace, monospace; font-size: 10.5px; color: #94A3B8; }
+  .command-tip-sev-bar {
+    display: flex; height: 4px; border-radius: 2px; overflow: hidden;
+    background: rgba(255,255,255,0.05);
+    margin-top: 6px;
+  }
+  .command-tip-sev-seg { height: 100%; }
+  .command-tip-hint {
+    margin-top: 8px;
+    padding-top: 6px;
+    border-top: 1px solid rgba(255,255,255,0.05);
+    font-family: ui-monospace, monospace;
+    font-size: 9.5px;
+    color: #64748B;
+    text-align: center;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
 
   /* ============ BARS / VIS ============ */
   .hbar { display: flex; width: 100%; height: 16px; border-radius: 3px; overflow: hidden; background: rgba(255,255,255,0.04); }
@@ -285,16 +409,43 @@
   <div id="root"></div>
 
   <script type="text/babel" data-presets="env,react">
-    const { useState, useEffect, useMemo, useRef, useCallback } = React;
+    const { useState, useEffect, useLayoutEffect, useMemo, useRef, useCallback } = React;
 
-    /* Reusable hook: close any popup/modal on the Escape key.
-       Pass a boolean `active` so inactive popups do not intercept the key. */
+    /* Reusable hook: close any popup/modal on the Escape key (desktop) AND
+       on the mobile/browser back button. While the popup is active we push a
+       marker history entry; popping it (back gesture or Android system back)
+       dismisses the popup. When the popup closes for any other reason
+       (X button, backdrop click, ESC), we pop our marker so history stays clean.
+       Multiple stacked popups work correctly — each back press unwinds one. */
     function useEscape(onClose, active = true) {
       useEffect(() => {
         if (!active) return;
         const onKey = (ev) => { if (ev.key === 'Escape') onClose(); };
         window.addEventListener('keydown', onKey);
-        return () => window.removeEventListener('keydown', onKey);
+
+        // Push a unique marker into history so back navigation pops it.
+        const marker = { __popupMarker: Date.now() + Math.random() };
+        let poppedByBack = false;
+        try { window.history.pushState(marker, ''); } catch (_) {}
+
+        const onPop = () => {
+          poppedByBack = true;
+          onClose();
+        };
+        window.addEventListener('popstate', onPop);
+
+        return () => {
+          window.removeEventListener('keydown', onKey);
+          window.removeEventListener('popstate', onPop);
+          // If the popup is closing for reasons other than back-button
+          // (ESC / X / backdrop / unmount), unwind the marker we pushed.
+          if (!poppedByBack) {
+            const st = window.history.state;
+            if (st && st.__popupMarker === marker.__popupMarker) {
+              try { window.history.back(); } catch (_) {}
+            }
+          }
+        };
       }, [onClose, active]);
     }
 
@@ -406,6 +557,7 @@
       network: <path d="M12 3a3 3 0 1 0 0 6 3 3 0 0 0 0-6zM6 18a3 3 0 1 0 0 6 3 3 0 0 0 0-6zM18 18a3 3 0 1 0 0 6 3 3 0 0 0 0-6zM12 9v3M12 12l-6 6M12 12l6 6" stroke="currentColor" strokeWidth="1.6" fill="none" strokeLinecap="round"/>,
       trophy: <path d="M7 4h10v5a5 5 0 0 1-10 0zM5 6H3a2 2 0 0 0 2 4M19 6h2a2 2 0 0 1-2 4M10 14h4M9 20h6M11 14v6M13 14v6" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round"/>,
       gear: <path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1" stroke="currentColor" strokeWidth="1.6" fill="none" strokeLinecap="round"/>,
+      smartphone: <path d="M8 2h8a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zM10 5h4M11 19h2" stroke="currentColor" strokeWidth="1.6" fill="none" strokeLinecap="round" strokeLinejoin="round"/>,
     };
     function Icon({ name, className = '' }) {
       return (
@@ -1112,6 +1264,8 @@
           <Impact />
           <Workflow />
           <Experience />
+          <Skills />
+          <CoreStack />
           <Capabilities />
           <Contact />
           <ReturnToTop />
@@ -1136,11 +1290,9 @@
       const [mobileOpen, setMobileOpen] = useState(false);
       useEscape(() => setMobileOpen(false), mobileOpen);
       const navLinks = [
-        { href: '#platform',     label: 'Platform' },
         { href: '#demo',         label: 'Live Demo' },
         { href: '#architecture', label: 'Architecture' },
         { href: '#experience',   label: 'Experience' },
-        { href: '#workflow',     label: 'Workflow' },
         { href: '#capabilities', label: 'Capabilities' },
         { href: '#contact',      label: 'Contact' },
       ];
@@ -2182,6 +2334,58 @@
       );
     }
 
+
+    /* ---- Map tooltip portal: escapes Leaflet's overflow:hidden ---- */
+    function MapTooltipPortal({ tip }) {
+      const boxRef = useRef(null);
+      const [pos, setPos] = useState({ left: tip.x, top: tip.y, placement: 'top' });
+
+      useLayoutEffect(() => {
+        const el = boxRef.current;
+        if (!el) return;
+        const rect = el.getBoundingClientRect();
+        const tw = rect.width;
+        const th = rect.height;
+        const vw = window.innerWidth;
+        const vh = window.innerHeight;
+        const gap = 12;
+
+        // Default: center horizontally on anchor, place above anchor
+        let left = tip.x - tw / 2;
+        let top = tip.y - th - gap;
+        let placement = 'top';
+
+        // Flip below if it would go off the top of the viewport
+        if (top < 8) {
+          top = tip.y + (tip.h || 0) + gap;
+          placement = 'bottom';
+        }
+        // If still off-screen vertically, clamp
+        if (top + th > vh - 8) top = Math.max(8, vh - th - 8);
+
+        // Clamp horizontally to viewport with a small margin
+        if (left < 8) left = 8;
+        if (left + tw > vw - 8) left = vw - tw - 8;
+
+        setPos({ left, top, placement });
+      }, [tip.x, tip.y, tip.w, tip.h, tip.html]);
+
+      return ReactDOM.createPortal(
+        <div
+          ref={boxRef}
+          style={{
+            position: 'fixed',
+            left: pos.left,
+            top: pos.top,
+            zIndex: 8000,
+            pointerEvents: 'none',
+          }}
+          dangerouslySetInnerHTML={{ __html: tip.html }}
+        />,
+        document.body
+      );
+    }
+
     /* ============ COMMAND MAP ============ */
     function CommandMap({ events, allEvents, onSelect }) {
       const mapRef = useRef(null);
@@ -2189,6 +2393,7 @@
       const clusterRef = useRef(null);
       const [bounds, setBounds] = useState(null);
       const [showSatellite, setShowSatellite] = useState(false);
+      const [hoverTip, setHoverTip] = useState(null); // { html, x, y, w, h } in viewport coords
       const tilesRef = useRef({});
 
       useEffect(() => {
@@ -2250,11 +2455,66 @@
         }
       }, [showSatellite]);
 
-      // Update markers when events change
+      // Update markers when events change (with tooltips)
       useEffect(() => {
         if (!clusterRef.current) return;
         clusterRef.current.clearLayers();
         const slice = events.slice(0, 3000); // performance limit (50% wider timeframe)
+
+        const escHtml = (s) => String(s == null ? '' : s)
+          .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        const sevColors = ['#475569','#f59e0b','#ff7b29','#ef4444','#dc2626'];
+
+        const fmtTime = (iso) => {
+          if (!iso) return '';
+          const d = new Date(iso);
+          if (isNaN(d.getTime())) return '';
+          const mo = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()];
+          let h = d.getHours();
+          const mm = String(d.getMinutes()).padStart(2, '0');
+          const ap = h >= 12 ? 'PM' : 'AM';
+          h = h % 12; if (h === 0) h = 12;
+          return mo + ' ' + d.getDate() + ', ' + h + ':' + mm + ' ' + ap;
+        };
+
+        const buildEventTip = (e) => {
+          const c = CATEGORIES[e.cat] || CATEGORIES.Other;
+          const sevC = sevColors[e.sev] || sevColors[0];
+          const addr = e.addr || '';
+          const cityLine = [e.city, e.state].filter(Boolean).join(', ');
+          const locLine = addr ? escHtml(addr) + (cityLine ? '<br/><span style="color:#64748B">' + escHtml(cityLine) + '</span>' : '') : escHtml(cityLine || '–');
+          return (
+            '<div class="command-tip">' +
+              '<div class="command-tip-head">' +
+                '<span class="command-tip-dot" style="background:' + c.color + '"></span>' +
+                '<div class="command-tip-title">' + escHtml(e.label || 'Event') + '</div>' +
+              '</div>' +
+              '<div class="command-tip-row">' +
+                '<span class="command-tip-key">Category</span>' +
+                '<span class="command-tip-val">' + escHtml(c.label) + '</span>' +
+              '</div>' +
+              '<div class="command-tip-row">' +
+                '<span class="command-tip-key">Severity</span>' +
+                '<span class="command-tip-val" style="color:' + sevC + ';font-weight:600">' + (e.sev != null ? e.sev : '–') + (e.sevTxt ? ' · ' + escHtml(e.sevTxt) : '') + '</span>' +
+              '</div>' +
+              '<div class="command-tip-row">' +
+                '<span class="command-tip-key">Location</span>' +
+                '<span class="command-tip-val">' + locLine + '</span>' +
+              '</div>' +
+              (e.dt ? '<div class="command-tip-row">' +
+                '<span class="command-tip-key">Time</span>' +
+                '<span class="command-tip-val mono">' + escHtml(fmtTime(e.dt)) + '</span>' +
+              '</div>' : '') +
+              (e.ccn || e.oid ? '<div class="command-tip-row">' +
+                '<span class="command-tip-key">ID</span>' +
+                '<span class="command-tip-val mono">' + escHtml(e.ccn || e.oid) + '</span>' +
+              '</div>' : '') +
+              '<div class="command-tip-hint">click to open</div>' +
+            '</div>'
+          );
+        };
+
         const markers = slice.map(e => {
           const c = CATEGORIES[e.cat] || CATEGORIES.Other;
           const html = '<div class="map-marker" style="background:' + c.color + '">' +
@@ -2262,10 +2522,97 @@
                        '</div>';
           const icon = L.divIcon({ html, className: '', iconSize: [30, 30], iconAnchor: [15, 15] });
           const m = L.marker([e.lat, e.lng], { icon });
-          m.on('click', () => onSelect(e));
+          m.eventData = e;
+          m.on('mouseover', () => {
+            const el = m._icon;
+            if (!el) return;
+            const r = el.getBoundingClientRect();
+            setHoverTip({
+              html: buildEventTip(e),
+              x: r.left + r.width / 2,
+              y: r.top,
+              w: r.width,
+              h: r.height,
+            });
+          });
+          m.on('mouseout', () => setHoverTip(null));
+          m.on('click', () => { setHoverTip(null); onSelect(e); });
           return m;
         });
         clusterRef.current.addLayers(markers);
+
+        // Cluster tooltip: compute category breakdown + severity distribution on hover
+        const onClusterHover = (evt) => {
+          const layer = evt.layer;
+          const kids = layer.getAllChildMarkers();
+          const n = kids.length;
+          // Category tally
+          const tally = {};
+          const sevTally = [0,0,0,0,0];
+          for (const k of kids) {
+            const ev = k.eventData;
+            if (!ev) continue;
+            tally[ev.cat] = (tally[ev.cat] || 0) + 1;
+            if (ev.sev >= 0 && ev.sev <= 4) sevTally[ev.sev] += 1;
+          }
+          const top = Object.entries(tally).sort((a,b) => b[1]-a[1]).slice(0, 4);
+          const catRows = top.map(([cat, count]) => {
+            const c = CATEGORIES[cat] || CATEGORIES.Other;
+            const pct = Math.round((count / n) * 100);
+            return (
+              '<div class="command-tip-cat-row">' +
+                '<span class="command-tip-cat-dot" style="background:' + c.color + '"></span>' +
+                '<span class="command-tip-cat-label">' + escHtml(c.label) + '</span>' +
+                '<span class="command-tip-cat-count">' + count + ' · ' + pct + '%</span>' +
+              '</div>'
+            );
+          }).join('');
+          const otherCount = n - top.reduce((s,[,c]) => s + c, 0);
+          const otherRow = otherCount > 0 ? (
+            '<div class="command-tip-cat-row">' +
+              '<span class="command-tip-cat-dot" style="background:#475569"></span>' +
+              '<span class="command-tip-cat-label" style="color:#94A3B8">Other categories</span>' +
+              '<span class="command-tip-cat-count">' + otherCount + '</span>' +
+            '</div>'
+          ) : '';
+          // Severity distribution bar
+          const sevBarSegs = sevTally.map((v, i) => {
+            if (v === 0) return '';
+            const w = (v / n) * 100;
+            return '<span class="command-tip-sev-seg" style="width:' + w + '%;background:' + sevColors[i] + '"></span>';
+          }).join('');
+          const html = (
+            '<div class="command-tip">' +
+              '<div class="command-tip-head">' +
+                '<span class="command-tip-tag">Cluster</span>' +
+                '<div class="command-tip-title">' + n + ' event' + (n === 1 ? '' : 's') + '</div>' +
+              '</div>' +
+              '<div>' + catRows + otherRow + '</div>' +
+              (sevBarSegs ? '<div class="command-tip-sev-bar">' + sevBarSegs + '</div>' : '') +
+              '<div class="command-tip-hint">click to zoom</div>' +
+            '</div>'
+          );
+          const el = layer._icon;
+          if (!el) return;
+          const r = el.getBoundingClientRect();
+          setHoverTip({
+            html,
+            x: r.left + r.width / 2,
+            y: r.top,
+            w: r.width,
+            h: r.height,
+          });
+        };
+        const onClusterOut = () => setHoverTip(null);
+        clusterRef.current.on('clustermouseover', onClusterHover);
+        clusterRef.current.on('clustermouseout',  onClusterOut);
+
+        return () => {
+          if (clusterRef.current) {
+            clusterRef.current.off('clustermouseover', onClusterHover);
+            clusterRef.current.off('clustermouseout',  onClusterOut);
+          }
+        };
       }, [events, onSelect]);
 
       // Compute visible events for the side listing
@@ -2330,6 +2677,7 @@
               </div>
             </div>
           </div>
+          {hoverTip && <MapTooltipPortal tip={hoverTip} />}
         </div>
       );
     }
@@ -3233,6 +3581,217 @@
               <div className="absolute left-4 md:left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-slate-600" />
               <div className="md:text-center text-[10px] font-mono text-slate-500 uppercase tracking-widest">// origin // 2004</div>
             </div>
+          </div>
+        </section>
+      );
+    }
+
+    /* ============ SKILLS ============ */
+    function Skills() {
+      const groups = [
+        {
+          icon: 'network',
+          title: 'Distributed Systems & Data Platforms',
+          chips: [
+            'In-memory processing',
+            'Distributed caching',
+            'Real-time ETL',
+            'High-throughput ingestion',
+            'Distributed data coordination',
+            'Multi-agency data unification',
+          ],
+        },
+        {
+          icon: 'code-braces',
+          title: 'Backend & APIs',
+          descriptor: 'Designing high-performance backend systems, APIs, and data workflows for real-time and distributed environments.',
+          chips: [
+            'High-performance APIs',
+            'RESTful services',
+            'Concurrency & parallel processing',
+            'Idempotent APIs & workflows',
+            'Event-driven architectures',
+            'Access control & security',
+            'Observability & monitoring',
+            'Workflow orchestration',
+          ],
+        },
+        {
+          icon: 'pin',
+          title: 'Geospatial Systems',
+          chips: [
+            'Spatial indexing',
+            'Clustering',
+            'Geocoding',
+            'Coordinate normalization',
+            'Multi-jurisdiction mapping',
+          ],
+        },
+        {
+          icon: 'database',
+          title: 'Data & Storage',
+          chips: [
+            'Relational modeling',
+            'Query optimization',
+            'Indexing strategies',
+            'Large-scale datasets',
+            'Data consistency & integrity',
+          ],
+        },
+        {
+          icon: 'monitor',
+          title: 'Frontend & Interfaces',
+          chips: [
+            'Real-time UI systems',
+            'Operational dashboards',
+            'High-density data visualization',
+            'Interaction-driven workflows',
+          ],
+        },
+        {
+          icon: 'smartphone',
+          title: 'Mobile Systems',
+          chips: [
+            'Real-time mobile applications',
+            'Push notification systems',
+            'Event-driven workflows',
+          ],
+        },
+        {
+          icon: 'cloud',
+          title: 'Cloud & Infrastructure',
+          chips: [
+            'Cloud-based architectures',
+            'On-premise deployments',
+            'Hybrid architectures',
+            'Secure environments',
+            'System reliability & uptime',
+          ],
+        },
+        {
+          icon: 'sparkle',
+          title: 'AI / Data Interaction',
+          chips: [
+            'RAG systems',
+            'Natural language querying',
+            'Contextual data retrieval',
+            'AI-assisted workflows',
+            'AI Command Index Language (AICL)',
+          ],
+        },
+      ];
+      return (
+        <section id="skills" className="max-w-7xl mx-auto px-6 py-16 border-t border-white/[0.05]">
+          <div className="mb-10 max-w-3xl">
+            <div className="text-[11px] font-mono text-slate-500 uppercase tracking-widest mb-2">Skills</div>
+            <h2 className="font-display font-bold text-3xl md:text-4xl text-slate-100 leading-tight">Systems &amp; Technologies I Build With</h2>
+            <p className="mt-3 text-slate-400 text-sm md:text-base leading-relaxed">
+              Technologies and patterns used to design and operate real-time, distributed systems.
+            </p>
+          </div>
+          <div className="grid md:grid-cols-2 gap-4">
+            {groups.map(g => (
+              <div key={g.title} className="panel p-5">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-8 h-8 rounded-md flex items-center justify-center bg-white/[0.04] border border-white/[0.06] text-evo-cyan">
+                    <Icon name={g.icon} className="w-4 h-4"/>
+                  </div>
+                  <div className="font-display font-semibold text-slate-100 leading-tight">{g.title}</div>
+                </div>
+                {g.descriptor && (
+                  <div className="text-[12px] text-slate-400 leading-relaxed mb-3">{g.descriptor}</div>
+                )}
+                <div className={"flex flex-wrap gap-1.5 " + (g.descriptor ? "" : "mt-2")}>
+                  {g.chips.map(chip => (
+                    <span
+                      key={chip}
+                      className="px-2.5 py-1 rounded-md text-[11px] font-mono text-slate-300 bg-ink-900/70 border border-ink-700/60 hover:border-evo-cyan/40 hover:text-slate-100 transition-colors"
+                    >
+                      {chip}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      );
+    }
+
+    /* ============ CORE LANGUAGES & PLATFORMS ============ */
+    function CoreStack() {
+      const groups = [
+        {
+          icon: 'code-braces',
+          title: 'Languages',
+          chips: ['C#', 'Java', 'JavaScript', 'TypeScript', 'SQL', 'C++'],
+        },
+        {
+          icon: 'cpu',
+          title: 'Frameworks & Runtime',
+          chips: ['.NET', 'ASP.NET', 'Java J2EE', 'React', 'Component-based UI'],
+        },
+        {
+          icon: 'database',
+          title: 'Data & Databases',
+          chips: ['SQL Server', 'MySQL', 'Relational database systems', 'Query optimization'],
+        },
+        {
+          icon: 'cloud',
+          title: 'Cloud & Infrastructure',
+          chips: ['Google Cloud Platform (GCP)', 'Firebase', 'On-premise systems', 'Hybrid architectures'],
+        },
+        {
+          icon: 'smartphone',
+          title: 'Mobile Platforms',
+          chips: ['Android', 'iOS', 'Kotlin', 'Firebase Cloud Messaging (FCM/GCM)'],
+        },
+        {
+          icon: 'monitor',
+          title: 'Web & UI Technologies',
+          chips: ['HTML5', 'CSS3', 'Real-time dashboards', 'Operational UI systems'],
+        },
+        {
+          icon: 'server',
+          title: 'Systems & Networking',
+          chips: ['Hardware', 'Networking', 'Firewalls', 'Secure environments'],
+        },
+        {
+          icon: 'sparkle',
+          title: 'AI & Data Systems',
+          chips: ['AI Engineering', 'RAG systems', 'Natural language querying', 'Azure OpenAI'],
+        },
+      ];
+      return (
+        <section id="stack" className="max-w-7xl mx-auto px-6 pt-4 pb-14">
+          <div className="mb-8 max-w-3xl">
+            <div className="text-[11px] font-mono text-slate-500 uppercase tracking-widest mb-2">Core Stack</div>
+            <h2 className="font-display font-bold text-2xl md:text-3xl text-slate-100 leading-tight">Core Languages &amp; Platforms</h2>
+            <p className="mt-2 text-slate-400 text-sm leading-relaxed">
+              Primary languages, frameworks, and platforms used to build and operate the systems above.
+            </p>
+          </div>
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-3">
+            {groups.map(g => (
+              <div key={g.title} className="panel p-4">
+                <div className="flex items-center gap-2.5 mb-3">
+                  <div className="w-7 h-7 rounded-md flex items-center justify-center bg-white/[0.04] border border-white/[0.06] text-slate-300">
+                    <Icon name={g.icon} className="w-3.5 h-3.5"/>
+                  </div>
+                  <div className="font-display font-semibold text-[13px] text-slate-100 leading-tight">{g.title}</div>
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {g.chips.map(chip => (
+                    <span
+                      key={chip}
+                      className="px-2 py-0.5 rounded-md text-[10.5px] font-mono text-slate-300 bg-ink-900/70 border border-ink-700/60 hover:border-evo-cyan/40 hover:text-slate-100 transition-colors"
+                    >
+                      {chip}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
         </section>
       );
