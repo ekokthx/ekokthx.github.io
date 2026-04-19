@@ -434,7 +434,15 @@
        marker history entry; popping it (back gesture or Android system back)
        dismisses the popup. When the popup closes for any other reason
        (X button, backdrop click, ESC), we pop our marker so history stays clean.
-       Multiple stacked popups work correctly — each back press unwinds one. */
+       Multiple stacked popups work correctly — each back press unwinds one.
+
+       Note on stacked popups (A opens B): when A's onSelect both closes A and
+       opens B, React unmounts A and mounts B synchronously, but history.back()
+       from A's cleanup queues an *async* popstate that would otherwise fire
+       after B has subscribed — tricking B into closing itself. We use a
+       module-level counter `expectedSilentPops` so B's listener can recognize
+       and ignore that internally-triggered popstate. */
+    let expectedSilentPops = 0;
     function useEscape(onClose, active = true) {
       useEffect(() => {
         if (!active) return;
@@ -447,6 +455,12 @@
         try { window.history.pushState(marker, ''); } catch (_) {}
 
         const onPop = () => {
+          // If another popup's cleanup just called history.back() internally,
+          // swallow that popstate instead of treating it as a user back-press.
+          if (expectedSilentPops > 0) {
+            expectedSilentPops -= 1;
+            return;
+          }
           poppedByBack = true;
           onClose();
         };
@@ -460,6 +474,9 @@
           if (!poppedByBack) {
             const st = window.history.state;
             if (st && st.__popupMarker === marker.__popupMarker) {
+              // Tell any sibling/newly-mounted popup listener to ignore the
+              // popstate that history.back() is about to queue.
+              expectedSilentPops += 1;
               try { window.history.back(); } catch (_) {}
             }
           }
