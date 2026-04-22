@@ -622,6 +622,42 @@
     50%      { border-color: rgba(103,232,249,0.55); box-shadow: 0 0 0 1px rgba(103,232,249,0.14), 0 0 26px -4px rgba(34,211,238,0.55); }
   }
 
+  /* ----- Experience timeline pins: pulsing radar halo + soft dot glow ----- */
+  @keyframes timelinePinPing {
+    0%   { transform: scale(0.55); opacity: 0.55; }
+    80%  { transform: scale(1.9);  opacity: 0;    }
+    100% { transform: scale(1.9);  opacity: 0;    }
+  }
+  @keyframes timelinePinRing {
+    0%, 100% { opacity: 0.35; transform: scale(1);    }
+    50%      { opacity: 0.7;  transform: scale(1.08); }
+  }
+  @keyframes timelinePinDotGlow {
+    0%, 100% { filter: brightness(1)    saturate(1);    }
+    50%      { filter: brightness(1.25) saturate(1.15); }
+  }
+  .timeline-pin-ping {
+    animation: timelinePinPing 2.8s cubic-bezier(0, 0, 0.2, 1) infinite;
+    transform-origin: center;
+    will-change: transform, opacity;
+  }
+  .timeline-pin-ring {
+    animation: timelinePinRing 2.8s ease-in-out infinite;
+    transform-origin: center;
+  }
+  .timeline-pin-dot {
+    animation: timelinePinDotGlow 3.2s ease-in-out infinite;
+  }
+  /* Stagger each pin so they breathe independently instead of blinking in sync. */
+  .timeline-pin:nth-child(odd)  .timeline-pin-ping { animation-delay: -0.9s; }
+  .timeline-pin:nth-child(odd)  .timeline-pin-ring { animation-delay: -0.9s; }
+  .timeline-pin:nth-child(odd)  .timeline-pin-dot  { animation-delay: -1.4s; }
+  @media (prefers-reduced-motion: reduce) {
+    .timeline-pin-ping,
+    .timeline-pin-ring,
+    .timeline-pin-dot { animation: none !important; }
+  }
+
   .scan-nearby-btn {
     position: relative;
     display: inline-flex;
@@ -2771,6 +2807,19 @@
       const d = new Date(iso);
       return (d.getMonth()+1) + '/' + d.getDate() + ' @ ' + timeFmt(iso);
     }
+    // Smart time column: shows just the time when the record is from today,
+    // otherwise prepends a short date so "9:30 AM" doesn't ambiguously mean
+    // today vs. three days ago. Example: "4/21 @ 4:55 AM".
+    function timeFmtSmart(iso) {
+      if (!iso) return '';
+      const d = new Date(iso);
+      if (isNaN(d.getTime())) return '';
+      const now = new Date();
+      const sameDay = d.getFullYear() === now.getFullYear()
+        && d.getMonth() === now.getMonth()
+        && d.getDate() === now.getDate();
+      return sameDay ? timeFmt(iso) : dateShortFmt(iso);
+    }
     function haversine(lat1, lon1, lat2, lon2) {
       const toRad = x => x * Math.PI / 180;
       const R = 3958.8;
@@ -2799,7 +2848,7 @@
         { icon: 'map',     title: 'Geospatial intelligence & mapping',  desc: 'Multi-jurisdictional mapping with clustering, jurisdiction overlays, and beat awareness.' },
         { icon: 'compass', title: 'Multi-jurisdiction coordination',    desc: 'Unified operating picture across agencies, beats, and command staff.' },
         { icon: 'phone',   title: 'Mobile, web & alerting ecosystem',   desc: 'Native apps, browser, and push alerting for field, dispatch, and command.' },
-        { icon: 'sparkle', title: 'AI-driven query system (RAG / AICL)', desc: 'Natural-language search over the operational corpus for fast investigative discovery.' },
+        { icon: 'sparkle', title: 'AI-driven query system (RAG / MCP)', desc: 'Natural-language search over the operational corpus for fast investigative discovery.' },
       ];
       return (
         <section id="platform" className="max-w-7xl mx-auto px-6 py-16 border-t border-white/[0.05]">
@@ -2898,7 +2947,7 @@
       ];
       const metrics = [
         { k: '16+',     v: 'Years of production operation' },
-        { k: '10+',     v: 'Active agencies on platform'   },
+        { k: '25+',     v: 'Active agencies on platform'   },
         { k: '1M+',     v: 'Daily record updates', sub: 'Real-time ingestion across distributed systems' },
         { k: '99.95%',  v: 'Production uptime SLO'         },
       ];
@@ -3492,6 +3541,36 @@
               for (const f of full) shiftRecordInPlace(f, delta);
             }
           }
+          // Densify the "past few hours" range. The raw dataset can be sparse
+          // near its newest edge, which makes the live feed look like it was
+          // frozen earlier in the day. Grab the N most-recent non-BOLO records
+          // and redistribute them across the last ~6 hours with light jitter
+          // so the Event Activity feed always shows plenty of fresh traffic.
+          // BOLOs are skipped — they're deliberately parked further in the past.
+          try {
+            const nowTs = Date.now();
+            const RECENT_WINDOW_MS = 6 * 60 * 60 * 1000; // last 6 hours
+            const RECENT_FLOOR_MS  = 3 * 60 * 1000;      // closest = 3 min ago
+            const isBolo = (r) => Array.isArray(r && r.bolos) && r.bolos.length > 0;
+            const candidates = full
+              .filter(f => !isBolo(f))
+              .filter(f => f.lat != null && f.lng != null && !Number.isNaN(f.lat) && !Number.isNaN(f.lng))
+              .map(f => ({ f, ts: maxTsOf(f) }))
+              .filter(x => x.ts > 0)
+              .sort((a, b) => b.ts - a.ts);
+            const pickCount = Math.min(22, candidates.length);
+            for (let i = 0; i < pickCount; i++) {
+              const { f, ts } = candidates[i];
+              // Evenly bucket across the recent window, newest bucket first.
+              const slot = i / Math.max(1, pickCount - 1); // 0..1
+              const baseOffset = RECENT_FLOOR_MS + slot * (RECENT_WINDOW_MS - RECENT_FLOOR_MS);
+              // ±7 minute jitter so the distribution doesn't look engineered.
+              const jitter = (Math.random() - 0.5) * 14 * 60 * 1000;
+              const targetTs = nowTs - baseOffset + jitter;
+              const recShift = targetTs - ts;
+              if (Math.abs(recShift) > 30 * 1000) shiftRecordInPlace(f, recShift);
+            }
+          } catch (_) { /* non-fatal: fallback to plain shift */ }
           lastShiftRef.current = Date.now();
           const byId = new Map();
           const slim = [];
@@ -3500,6 +3579,15 @@
             byId.set(f.id, f);
             slim.push(enrichSlim(toSlim(f)));
           }
+          // Global default: newest-first chronological order. Individual widgets
+          // may re-sort (by distance, severity, etc.) but the base feed is
+          // always latest-on-top so the Event Activity / Ticker / etc. read
+          // chronologically by default.
+          slim.sort((a, b) => {
+            const ta = a.dt ? new Date(a.dt).getTime() : 0;
+            const tb = b.dt ? new Date(b.dt).getTime() : 0;
+            return tb - ta;
+          });
           setEnriched(byId);
           setEvents(slim); setMeta(mt); setLoading(false);
         };
@@ -4083,7 +4171,7 @@
                 <span className="text-slate-300">{e.label}</span>
                 <span className="text-slate-500">·</span>
                 <span className="text-slate-500 font-mono text-[10px]">{e.addr ? e.addr.slice(0, 28) : 'NCR'}</span>
-                <span className="text-slate-500 font-mono text-[10px]">· {timeFmt(e.dt)}</span>
+                <span className="text-slate-500 font-mono text-[10px]">· {timeFmtSmart(e.dt)}</span>
               </button>
             ))}
           </div>
@@ -4173,7 +4261,7 @@
             </div>
           </div>
           <div className="text-right">
-            <div className="text-[12px] font-mono text-slate-200">{timeFmt(e.dt)}</div>
+            <div className="text-[12px] font-mono text-slate-200">{timeFmtSmart(e.dt)}</div>
             <div className="text-[10px] text-slate-500 font-mono">{e.miles.toFixed(1)} mi {e.dir}</div>
             {e.dist && <div className="mt-1"><span className="chip-dist">{e.dist}{e.beat ? ' (' + e.beat + ')' : ''}</span></div>}
           </div>
@@ -6242,7 +6330,7 @@
                     ref={inputRef}
                     value={query}
                     onChange={e => setQuery(e.target.value)}
-                    placeholder="Ask Evo AI in plain English — e.g. high severity thefts in district 1 this week"
+                    placeholder="Ask Evo AI — e.g. high severity thefts in district 1 this week"
                     className="w-full bg-ink-900 border border-ink-700 rounded-lg px-4 py-3 pr-10 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-evo-cyan/60"
                   />
                   <button
@@ -7809,6 +7897,42 @@
         else next.add(idx);
         return next;
       });
+
+      // Scroll-driven "slide" fill on the vertical timeline rail.
+      // As the Experience section moves through the viewport, a colored segment
+      // grows along the rail and its bright leading edge tracks the scroll.
+      const railContainerRef = React.useRef(null);
+      const [railProgress, setRailProgress] = React.useState(0);
+      React.useEffect(() => {
+        let raf = 0;
+        const compute = () => {
+          raf = 0;
+          const el = railContainerRef.current;
+          if (!el) return;
+          const rect = el.getBoundingClientRect();
+          const vh = window.innerHeight || document.documentElement.clientHeight || 800;
+          // Start filling when the rail's top crosses ~75% of viewport height,
+          // finish filling when the rail's bottom crosses ~25% of viewport height.
+          const startY = vh * 0.75;
+          const endY   = vh * 0.25;
+          const travel = (startY - rect.top);
+          const total  = rect.height + (startY - endY);
+          const p = total > 0 ? travel / total : 0;
+          setRailProgress(Math.max(0, Math.min(1, p)));
+        };
+        const onScroll = () => {
+          if (raf) return;
+          raf = requestAnimationFrame(compute);
+        };
+        compute();
+        window.addEventListener('scroll', onScroll, { passive: true });
+        window.addEventListener('resize', onScroll);
+        return () => {
+          if (raf) cancelAnimationFrame(raf);
+          window.removeEventListener('scroll', onScroll);
+          window.removeEventListener('resize', onScroll);
+        };
+      }, []);
       const items = [
         {
           kind: 'job',
@@ -8059,8 +8183,39 @@
             </p>
           </div>
 
-          <div className="relative">
+          <div ref={railContainerRef} className="relative">
             <div className="timeline-rail absolute left-4 md:left-1/2 top-2 bottom-2 w-px md:-translate-x-1/2 pointer-events-none" />
+            {/* Scroll-driven sliding fill: bright leading edge tracks scroll position */}
+            <div
+              className="timeline-rail-fill absolute left-4 md:left-1/2 top-2 w-px md:-translate-x-1/2 pointer-events-none"
+              aria-hidden="true"
+              style={{
+                height: 'calc((100% - 1rem) * ' + railProgress + ')',
+                background:
+                  'linear-gradient(180deg, rgba(34,211,238,0.0) 0%, rgba(34,211,238,0.55) 25%, rgba(59,130,246,0.8) 60%, rgba(168,85,247,0.95) 100%)',
+                boxShadow:
+                  '0 1px 6px rgba(56,189,248,0.65), 0 0 14px rgba(168,85,247,0.45)',
+                transition: 'height 90ms linear',
+                willChange: 'height',
+              }}
+            />
+            {/* Glowing "comet head" that sits at the current fill tip */}
+            <div
+              className="timeline-rail-head absolute left-4 md:left-1/2 md:-translate-x-1/2 -translate-x-1/2 pointer-events-none"
+              aria-hidden="true"
+              style={{
+                top: 'calc(0.5rem + (100% - 1rem) * ' + railProgress + ')',
+                width: '10px',
+                height: '10px',
+                borderRadius: '9999px',
+                background:
+                  'radial-gradient(circle, rgba(191,219,254,0.95) 0%, rgba(96,165,250,0.7) 40%, rgba(168,85,247,0) 75%)',
+                transform: 'translate(-50%, -50%)',
+                opacity: railProgress > 0.002 && railProgress < 0.998 ? 1 : 0,
+                transition: 'top 90ms linear, opacity 250ms ease',
+                filter: 'blur(0.3px)',
+              }}
+            />
 
             <div className="space-y-8 md:space-y-14">
               {items.map((it, idx) => {
@@ -8069,15 +8224,30 @@
                 const stackCol = isLeft ? 'md:col-start-2 md:row-start-1 md:pl-8' : 'md:col-start-1 md:row-start-1 md:pr-8';
                 return (
                   <div key={idx} className="relative md:grid md:grid-cols-2 md:gap-8 items-start">
-                    {/* node dot + ring */}
+                    {/* node: animated timeline pin (radar-pulse halo + centered dot) */}
                     <div
-                      className="absolute left-4 md:left-1/2 top-3 -translate-x-1/2 z-10 w-3 h-3 rounded-full border-2 border-ink-900"
-                      style={{ background: it.color }}
-                    />
-                    <div
-                      className="absolute left-4 md:left-1/2 top-3 -translate-x-1/2 w-7 h-7 rounded-full border opacity-40 -translate-y-1.5 pointer-events-none"
-                      style={{ borderColor: it.color }}
-                    />
+                      className="timeline-pin absolute left-4 md:left-1/2 top-5 -translate-x-1/2 -translate-y-1/2 z-10 w-7 h-7 flex items-center justify-center pointer-events-none"
+                    >
+                      {/* expanding radar halo */}
+                      <span
+                        className="absolute inset-0 rounded-full timeline-pin-ping"
+                        style={{ background: it.color }}
+                      />
+                      {/* breathing outer ring */}
+                      <span
+                        className="absolute inset-0 rounded-full border timeline-pin-ring"
+                        style={{ borderColor: it.color }}
+                      />
+                      {/* solid center dot with persistent color glow */}
+                      <span
+                        className="relative w-3 h-3 rounded-full border-2 border-ink-900 timeline-pin-dot"
+                        style={{
+                          background: it.color,
+                          boxShadow:
+                            '0 0 6px ' + it.color + 'aa, 0 0 14px ' + it.color + '55',
+                        }}
+                      />
+                    </div>
 
                     {/* Card (always first in DOM so mobile shows it first) */}
                     <div className={'pl-12 md:pl-0 ' + cardCol}>
@@ -8473,7 +8643,12 @@
         <footer className="max-w-7xl mx-auto px-6 py-10 border-t border-white/[0.05] mt-8">
           <div className="flex flex-wrap items-center justify-between gap-4 text-[11px] font-mono text-slate-500">
             <div>&copy; {new Date().getFullYear()} Michael W Jones &middot; All rights reserved.</div>
-            <div>Personal portfolio demonstration. No live or sensitive operational data is exposed.</div>
+            <div className="flex items-center gap-4">
+              <span>StarLight EVO&reg; is a registered trademark of Transglobal Business Systems, Inc.</span>
+            </div>
+          </div>
+          <div className="mt-2 text-[10px] text-slate-600">
+            Demo data shown is a sanitized, location-swapped subset for portfolio demonstration. No live or sensitive operational data is exposed.
           </div>
         </footer>
       );
@@ -8484,4 +8659,5 @@
     root.render(<App />);
   </script>
 </body>
+
 </html>
